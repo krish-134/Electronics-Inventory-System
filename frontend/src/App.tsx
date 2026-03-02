@@ -1,35 +1,48 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useRef, type Ref } from 'react'
 import './App.css'
+import DBTable from './components/DBTable';
 
 function App() {
-  const [count, setCount] = useState(0)
+    const partNumRef: Ref<HTMLInputElement> = useRef(null);
+    const addComponent = async () => {
+        if (!partNumRef.current) return;
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+        const partNum = partNumRef.current.value;
+
+        const body = {
+            part_num: partNum,
+            price: 27.33,
+            name: `Name ${Math.floor(Math.random() * 1_000_000)}`,
+            package: '0402',
+            tolerance: 0.1,
+            quantity: 1,
+            voltage_rating: 16,
+            additional: {},
+
+            storage_name: 'desk',
+            position: 'drawer 1',
+            facility: 'home',
+            supplier_name: 'DigiKey'
+        }
+
+        await fetch(`http://localhost:3000/component/create`, {
+            body: JSON.stringify(body),
+            method: "POST"
+        }).finally(() => {
+            window.location.reload()
+        })
+    }
+    return (
+        <>
+            <div style={{ "display": "flex", "flexDirection": "row", "gap": "8px" }}>
+                <input type="text" ref={partNumRef} placeholder="Part #" />
+                <input type="button" onClick={addComponent} value="Create" />
+            </div>
+            <DBTable tableName='component' />
+            <DBTable tableName='supplier' />
+            <DBTable tableName='location' />
+        </>
+    )
 }
 
 export default App
