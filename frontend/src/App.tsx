@@ -4,6 +4,10 @@ import DBTable from './components/DBTable';
 
 function App() {
     const partNumRef: Ref<HTMLInputElement> = useRef(null);
+
+    const updatePartNumRef: Ref<HTMLInputElement> = useRef(null);
+    const updatePriceRef: Ref<HTMLInputElement> = useRef(null);
+
     const addComponent = async () => {
         if (!partNumRef.current) return;
 
@@ -32,11 +36,36 @@ function App() {
             window.location.reload()
         })
     }
+
+    const updatePrice = async () => {
+        if (!updatePartNumRef.current || !updatePriceRef.current) return;
+
+        const partNum = updatePartNumRef.current.value;
+        const price = updatePriceRef.current.value;
+
+        const body = {
+            price: price
+        }
+
+        await fetch(`http://localhost:3000/component/${partNum}/price`, {
+            body: JSON.stringify(body),
+            method: "PUT"
+        }).finally(() => {
+            window.location.reload()
+        })
+    }
+
     return (
         <>
             <div style={{ "display": "flex", "flexDirection": "row", "gap": "8px" }}>
                 <input type="text" ref={partNumRef} placeholder="Part #" />
                 <input type="button" onClick={addComponent} value="Create" />
+            </div>
+            <div style={{ "display": "flex", "flexDirection": "row", "gap": "8px", "marginTop":"12px" }}>
+                
+                <input type="text" ref={updatePartNumRef} placeholder="Part #" />
+                <input type="text" ref={updatePriceRef} placeholder="Updated Price" />
+                <input type="button" onClick={updatePrice} value="Update" />
             </div>
             <DBTable tableName='component' />
             <DBTable tableName='supplier' />

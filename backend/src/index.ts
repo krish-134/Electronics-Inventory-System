@@ -80,4 +80,18 @@ INSERT INTO component (
     return c.json(body, 200)
 })
 
+// temp endpoint to showcase database tuple edits
+app.put('/component/:part_num/price', async (c) => {
+    const { part_num } = c.req.param();
+    const  body  = await c.req.json();
+
+    await sql`
+        UPDATE component 
+        SET price = ${body.price} 
+        WHERE part_num = ${part_num}
+    `;
+
+    return c.json(body, 200)
+});
+
 export default app
