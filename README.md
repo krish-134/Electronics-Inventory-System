@@ -1,2 +1,2 @@
 # CPSC 304 Project
-React + PostgreSQL
+React frontend + PostgreSQL backend
