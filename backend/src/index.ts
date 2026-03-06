@@ -94,4 +94,18 @@ app.put('/component/:part_num/price', async (c) => {
     return c.json(body, 200)
 });
 
+// hardcoded delete for demonstration
+app.delete("/component/:part_num", async (c) => {
+    const { part_num } = c.req.param();
+
+    await sql`
+        DELETE 
+        FROM component
+        WHERE part_num = ${part_num}
+    `;
+
+    return c.json(part_num, 200)
+})
+
+
 export default app
