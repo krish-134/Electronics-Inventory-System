@@ -150,6 +150,21 @@ CREATE TABLE Purchase (
         ON DELETE SET NULL
 );
 
+CREATE TABLE PurchaseIncludes (
+    order_number VARCHAR,
+    part_num VARCHAR,
+
+    FOREIGN KEY (order_number)
+        REFERENCES Purchase(order_number)
+        ON DELETE NO ACTION,
+
+    FOREIGN KEY (part_num)
+        REFERENCES Component(part_num)
+        ON DELETE NO ACTION,
+
+    PRIMARY KEY (order_number, part_num)
+);
+
 ------------------------------------------------------------  
 CREATE TABLE Includes (
     project_name       VARCHAR,
