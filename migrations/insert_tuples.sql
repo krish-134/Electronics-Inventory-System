@@ -77,6 +77,14 @@ INSERT INTO Purchase (order_number, price, tracking_code, date_placed, delivery_
 ('4', 12.99, '22222222222222222', '2026-03-06 10:00:00', '2026-03-06 10:00:01', 'adafruit', 'united_states_postal_service'),
 ('5', 88.00, 'ABC123321CBA', '2026-03-06 10:00:00', '2026-03-06 10:00:01', 'farnell', 'canada_post');
 
+-- PurchaseIncludes --
+INSERT INTO PurchaseIncludes (order_number, part_num) VALUES
+('1', 'CAP-100NF'),
+('1', 'CAP-10UF'),
+('1', 'RES-10K'),
+('2', 'RES-1K'),
+('2', 'DIO-1N4148');
+
 -- Includes --
 INSERT INTO Includes (project_name, component_part_num, quantity) VALUES 
 ('sub_bot', 'RES-10K', '10'),
