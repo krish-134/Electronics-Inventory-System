@@ -1,13 +1,14 @@
 import { useRef, type Ref } from 'react'
 import './App.css'
 import DBTable from './components/DBTable';
+import { Button, Stack, TextField, ThemeProvider, createTheme } from '@mui/material'
 
 function App() {
     const partNumRef: Ref<HTMLInputElement> = useRef(null);
 
     const updatePartNumRef: Ref<HTMLInputElement> = useRef(null);
     const updatePriceRef: Ref<HTMLInputElement> = useRef(null);
-    
+
     const deletePartNumRef: Ref<HTMLInputElement> = useRef(null);
 
     const addComponent = async () => {
@@ -71,20 +72,21 @@ function App() {
 
     return (
         <>
-            <div className="flex flex-row gap-2">
-                <input type="text" ref={partNumRef} placeholder="Part #" />
-                <input type="button" onClick={addComponent} value="Create" />
-            </div>
-            <div className="flex flex-row gap-2">
-                
-                <input type="text" ref={updatePartNumRef} placeholder="Part #" />
-                <input type="text" ref={updatePriceRef} placeholder="Updated Price" />
-                <input type="button" onClick={updatePrice} value="Update" />
-            </div>
-            <div className="flex flex-row gap-2">
-                <input type="text" ref={deletePartNumRef} placeholder="Part #" />
-                <input type="button" onClick={deleteComponent} value="Delete" />
-            </div>
+            <Stack gap={2}>
+                <Stack gap={2} direction="row">
+                    <TextField label="Part #" variant="outlined" ref={partNumRef} />
+                    <Button onClick={addComponent} variant="contained">Create</Button>
+                </Stack>
+                <Stack gap={2} direction="row">
+                    <TextField label="Part #" variant="outlined" ref={updatePartNumRef} />
+                    <TextField label="Updated Price" variant="outlined" ref={updatePriceRef} />
+                    <Button onClick={updatePrice} variant="contained">Update</Button>
+                </Stack>
+                <Stack gap={2} direction="row">
+                    <TextField label="Part #" variant="outlined" ref={deletePartNumRef} />
+                    <Button onClick={deleteComponent} variant="contained">Delete</Button>
+                </Stack>
+            </Stack>
             <DBTable tableName='component' />
             <DBTable tableName='supplier' />
             <DBTable tableName='location' />
