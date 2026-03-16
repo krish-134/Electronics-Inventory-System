@@ -71,17 +71,17 @@ function App() {
 
     return (
         <>
-            <div style={{ "display": "flex", "flexDirection": "row", "gap": "8px" }}>
+            <div className="flex flex-row gap-2">
                 <input type="text" ref={partNumRef} placeholder="Part #" />
                 <input type="button" onClick={addComponent} value="Create" />
             </div>
-            <div style={{ "display": "flex", "flexDirection": "row", "gap": "8px", "marginTop":"12px" }}>
+            <div className="flex flex-row gap-2">
                 
                 <input type="text" ref={updatePartNumRef} placeholder="Part #" />
                 <input type="text" ref={updatePriceRef} placeholder="Updated Price" />
                 <input type="button" onClick={updatePrice} value="Update" />
             </div>
-            <div style={{ "display": "flex", "flexDirection": "row", "gap": "8px", "marginTop":"12px" }}>
+            <div className="flex flex-row gap-2">
                 <input type="text" ref={deletePartNumRef} placeholder="Part #" />
                 <input type="button" onClick={deleteComponent} value="Delete" />
             </div>
