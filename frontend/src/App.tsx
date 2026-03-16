@@ -8,7 +8,7 @@ function App() {
     const updatePartNumRef: Ref<HTMLInputElement> = useRef(null);
     const updatePriceRef: Ref<HTMLInputElement> = useRef(null);
     
-    const deletePartNumRef: Ref<HTMLInputElement> = useRef(null);
+    // const deletePartNumRef: Ref<HTMLInputElement> = useRef(null);
 
     const addComponent = async () => {
         if (!partNumRef.current) return;
@@ -57,9 +57,9 @@ function App() {
         })
     }
 
-    const deleteComponent = async () => {
-        if (!partNumRef.current || !deletePartNumRef.current) return;
-        const partNum = deletePartNumRef.current.value;
+    const deleteComponent = async (partNum: string) => {
+        // if (!partNumRef.current || !deletePartNumRef.current) return;
+        // const partNum = deletePartNumRef.current.value;
 
 
         await fetch(`http://localhost:3000/component/${partNum}`, {
@@ -81,11 +81,11 @@ function App() {
                 <input type="text" ref={updatePriceRef} placeholder="Updated Price" />
                 <input type="button" onClick={updatePrice} value="Update" />
             </div>
-            <div style={{ "display": "flex", "flexDirection": "row", "gap": "8px", "marginTop":"12px" }}>
+            {/* <div style={{ "display": "flex", "flexDirection": "row", "gap": "8px", "marginTop":"12px" }}>
                 <input type="text" ref={deletePartNumRef} placeholder="Part #" />
                 <input type="button" onClick={deleteComponent} value="Delete" />
-            </div>
-            <DBTable tableName='component' />
+            </div> */}
+            <DBTable tableName='component' keyColumn='part_num' onDelete={deleteComponent} />
             <DBTable tableName='supplier' />
             <DBTable tableName='location' />
         </>
