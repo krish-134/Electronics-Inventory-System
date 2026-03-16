@@ -3,10 +3,14 @@ import { useEffect, useState } from "react"
 
 interface DBTableParams {
     tableName: string
+    keyColumn?: string
+    onDelete?: (keyValue: string) => void
 }
 
-const DBTable: React.FC<DBTableParams> = ({ tableName }) => {
-    const [vals, setVals] = useState<object[]>([])
+const DBTable: React.FC<DBTableParams> = ({ tableName, keyColumn, onDelete}) => {
+    // const [vals, setVals] = useState<object[]>([])
+    const [vals, setVals] = useState<Record<string, unknown>[]>([])
+
 
     useEffect(() => {
         fetch(`http://localhost:3000/${tableName}/all`)
@@ -26,14 +30,35 @@ const DBTable: React.FC<DBTableParams> = ({ tableName }) => {
                     {keys.map(k => (
                         <th>{k}</th>
                     ))}
+                    {onDelete && <th>Actions</th>}
                 </tr>
-                {vals && vals.map(
+                {vals.map((row, i) => {
+                    const keyValue = keyColumn ?  String(row[keyColumn]) : undefined
+                    return (
+                        <tr key = {i}>
+                            {Object.values(row).map((val, jcol) => (
+                                <td key={jcol}>{JSON.stringify(val)}</td>
+                            ))}
+                            {onDelete && keyValue && (
+                                <td>
+                                    <button
+                                        className="delete-btn"
+                                        onClick={() => onDelete(keyValue)}
+                                        >
+                                            Delete
+                                        </button>
+                                </td>
+                            )}
+                        </tr>
+                    )
+                })}
+                {/* {vals && vals.map(
                     v => (
                         <tr>
                             {Object.values(v).map(c => (<td>{JSON.stringify(c)}</td>))}
                         </tr>
                     )
-                )}
+                )} */}
             </table>
         </>
     )
