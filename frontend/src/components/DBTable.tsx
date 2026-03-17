@@ -1,7 +1,6 @@
 import type React from "react"
 import { useEffect, useState } from "react"
 import { TableContainer, Paper, Table, TableCell, TableHead, TableBody, TableRow, Typography, Button } from "@mui/material"
-// import { DeleteIcon } from "@mui/icons-material"
 
 interface DBTableParams {
     tableName: string
