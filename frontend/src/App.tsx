@@ -9,8 +9,6 @@ function App() {
     const updatePartNumRef: Ref<HTMLInputElement> = useRef(null);
     const updatePriceRef: Ref<HTMLInputElement> = useRef(null);
 
-    const deletePartNumRef: Ref<HTMLInputElement> = useRef(null);
-
     const addComponent = async () => {
         if (!partNumRef.current) return;
 
@@ -70,20 +68,16 @@ function App() {
         <>
             <Stack gap={2}>
                 <Stack gap={2} direction="row">
-                    <TextField label="Part #" variant="outlined" ref={partNumRef} />
+                    <TextField label="Part #" variant="outlined" inputRef={partNumRef} />
                     <Button onClick={addComponent} variant="contained">Create</Button>
                 </Stack>
                 <Stack gap={2} direction="row">
-                    <TextField label="Part #" variant="outlined" ref={updatePartNumRef} />
-                    <TextField label="Updated Price" variant="outlined" ref={updatePriceRef} />
+                    <TextField label="Part #" variant="outlined" inputRef={updatePartNumRef} />
+                    <TextField label="Updated Price" variant="outlined" inputRef={updatePriceRef} />
                     <Button onClick={updatePrice} variant="contained">Update</Button>
                 </Stack>
-                <Stack gap={2} direction="row">
-                    <TextField label="Part #" variant="outlined" ref={deletePartNumRef} />
-                    <Button onClick={deleteComponent} variant="contained">Delete</Button>
-                </Stack>
             </Stack>
-            <DBTable tableName='component' />
+            <DBTable tableName='component' keyColumn='part_num' onDelete={deleteComponent}/>
             <DBTable tableName='supplier' />
             <DBTable tableName='location' />
         </>
