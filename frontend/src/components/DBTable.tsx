@@ -1,5 +1,6 @@
 import type React from "react"
 import { useEffect, useState } from "react"
+import { TableContainer, Paper, Table, TableCell, TableHead, TableBody, TableRow, Typography } from "@mui/material"
 
 interface DBTableParams {
     tableName: string
@@ -23,35 +24,27 @@ const DBTable: React.FC<DBTableParams> = ({ tableName, keyColumn, onDelete}) => 
 
     return (
         <>
-            <strong>{tableName}</strong>
-            <table>
-                <tr>
-                    {keys.map(k => (
-                        <th>{k}</th>
-                    ))}
-                    {onDelete && <th>Actions</th>}
-                </tr>
-                {vals.map((row, i) => {
-                    const keyValue = keyColumn ?  String(row[keyColumn]) : undefined
-                    return (
-                        <tr key = {i}>
-                            {Object.values(row).map((val, jcol) => (
-                                <td key={jcol}>{JSON.stringify(val)}</td>
+            <Typography variant="h4">{tableName}</Typography>
+            <TableContainer component={Paper}>
+                <Table sx={{ minWidth: 650 }} aria-label={`${tableName} table`}>
+                    <TableHead>
+                        <TableRow>
+                            {keys.map(k => (
+                                <TableCell>{k}</TableCell>
                             ))}
-                            {onDelete && keyValue && (
-                                <td>
-                                    <button
-                                        className="delete-btn"
-                                        onClick={() => onDelete(keyValue)}
-                                        >
-                                            Delete
-                                        </button>
-                                </td>
-                            )}
-                        </tr>
-                    )
-                })}
-            </table>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {vals && vals.map(
+                            v => (
+                                <TableRow>
+                                    {Object.values(v).map(c => (<TableCell>{JSON.stringify(c)}</TableCell>))}
+                                </TableRow>
+                            )
+                        )}
+                    </TableBody>
+                </Table>
+            </TableContainer>
         </>
     )
 }
