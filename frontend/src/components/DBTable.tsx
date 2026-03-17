@@ -8,7 +8,6 @@ interface DBTableParams {
 }
 
 const DBTable: React.FC<DBTableParams> = ({ tableName, keyColumn, onDelete}) => {
-    // const [vals, setVals] = useState<object[]>([])
     const [vals, setVals] = useState<Record<string, unknown>[]>([])
 
 
@@ -52,13 +51,6 @@ const DBTable: React.FC<DBTableParams> = ({ tableName, keyColumn, onDelete}) => 
                         </tr>
                     )
                 })}
-                {/* {vals && vals.map(
-                    v => (
-                        <tr>
-                            {Object.values(v).map(c => (<td>{JSON.stringify(c)}</td>))}
-                        </tr>
-                    )
-                )} */}
             </table>
         </>
     )
