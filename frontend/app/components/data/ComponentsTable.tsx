@@ -1,10 +1,9 @@
-import { Avatar, Badge, Box, Chip, Stack, Typography } from "@mui/material"
-import { DataGrid, GridRowSelectionModel, type GridColDef } from "@mui/x-data-grid"
+import { Avatar, Stack, Typography } from "@mui/material"
+import { type GridColDef } from "@mui/x-data-grid"
 import type React from "react"
-import { useState, useEffect } from "react"
 import { IconCircuitCapacitor, IconCircuitDiode, IconCircuitResistor } from '@tabler/icons-react'
-import CustomToolbar from "./CustomToolbar"
 import CustomTable from "../CustomTable"
+import { Link } from "react-router"
 
 const columns: GridColDef[] = [
     {
@@ -42,8 +41,20 @@ const columns: GridColDef[] = [
             return JSON.stringify(params.field)
         }
     },
-    { "field": "storage_name", headerName: "Storage" },
-    { "field": "supplier_name", headerName: "Supplier" },
+    {
+        "field": "storage_name", headerName: "Storage", renderCell: (params) => (
+            <Link to={`/locations#${params.value}`}>
+                {params.formattedValue}
+            </Link>
+        )
+    },
+    {
+        "field": "supplier_name", headerName: "Supplier", renderCell: (params) => (
+            <Link to={`/shipping#supplier-${params.value}`}>
+                {params.formattedValue}
+            </Link>
+        )
+    },
 ]
 
 const ComponentsTable: React.FC = () => {
