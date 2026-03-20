@@ -3,6 +3,7 @@ import { ConstructionRounded, HomeRounded, LocalShippingRounded, LocationOnRound
 import { Avatar, Badge, badgeClasses, Box, drawerClasses, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Drawer as MUIDrawer, Stack, Typography } from "@mui/material"
 import type React from "react"
 import { useState } from "react"
+import { Link, useLocation } from "react-router"
 
 const Drawer = styled(MUIDrawer)({
     width: 240,
@@ -15,19 +16,26 @@ const Drawer = styled(MUIDrawer)({
     }
 })
 
-const TOP_OPTIONS = [
-    { text: "Home", icon: (<HomeRounded />) },
-    { text: "Components", icon: (<MemoryRounded />) },
-    { text: "Projects", icon: (<ConstructionRounded />) },
-    { text: "Locations", icon: (<LocationOnRounded />) },
-    { text: "Shipping", icon: (<LocalShippingRounded />) },
+interface MenuOption {
+    text: string
+    icon: React.ReactNode,
+    href: string
+}
+
+const TOP_OPTIONS: MenuOption[] = [
+    { text: "Home", icon: (<HomeRounded />), href: "/" },
+    { text: "Components", icon: (<MemoryRounded />), href: "/components" },
+    { text: "Projects", icon: (<ConstructionRounded />), href: "/projects" },
+    { text: "Locations", icon: (<LocationOnRounded />), href: "/locations" },
+    { text: "Shipping", icon: (<LocalShippingRounded />), href: "/shipping" },
 ]
 
-const BOT_OPTIONS = [
-    { text: "Settings", icon: (<SettingsRounded />) },
+const BOT_OPTIONS: MenuOption[] = [
+    { text: "Settings", icon: (<SettingsRounded />), href: "/settings" },
 ]
 
 const SideBar: React.FC = () => {
+    const location = useLocation()
     const [showError, setShowError] = useState(false)
     return (
         <Drawer variant="permanent"
@@ -48,20 +56,24 @@ const SideBar: React.FC = () => {
                     <List dense>
                         {TOP_OPTIONS.map((v, i) => (
                             <ListItem key={i} disablePadding sx={{ display: 'block' }}>
-                                <ListItemButton selected={i == 0}>
-                                    <ListItemIcon>{v.icon}</ListItemIcon>
-                                    <ListItemText primary={v.text} />
-                                </ListItemButton>
+                                <Link to={v.href}>
+                                    <ListItemButton selected={location.pathname == v.href}>
+                                        <ListItemIcon>{v.icon}</ListItemIcon>
+                                        <ListItemText primary={v.text} />
+                                    </ListItemButton>
+                                </Link>
                             </ListItem>
                         ))}
                     </List>
                     <List dense>
                         {BOT_OPTIONS.map((v, i) => (
                             <ListItem key={i} disablePadding sx={{ display: 'block' }}>
-                                <ListItemButton>
-                                    <ListItemIcon>{v.icon}</ListItemIcon>
-                                    <ListItemText primary={v.text} />
-                                </ListItemButton>
+                                <Link to={v.href}>
+                                    <ListItemButton selected={location.pathname == v.href}>
+                                        <ListItemIcon>{v.icon}</ListItemIcon>
+                                        <ListItemText primary={v.text} />
+                                    </ListItemButton>
+                                </Link>
                             </ListItem>
                         ))}
                     </List>
