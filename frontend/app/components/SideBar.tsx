@@ -2,9 +2,8 @@ import styled from "@emotion/styled"
 import { ConstructionRounded, HomeRounded, LocalShippingRounded, LocationOnRounded, MemoryRounded, MoreVertRounded, SettingsRounded } from "@mui/icons-material"
 import { Avatar, Badge, badgeClasses, Box, drawerClasses, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Drawer as MUIDrawer, Stack, Typography } from "@mui/material"
 import type React from "react"
-import { useContext, useState } from "react"
-import type { Page } from "../PageContext"
-import PageContext from "../PageContext"
+import { useState } from "react"
+import { Link, useLocation } from "react-router"
 
 const Drawer = styled(MUIDrawer)({
     width: 240,
@@ -20,24 +19,24 @@ const Drawer = styled(MUIDrawer)({
 interface MenuOption {
     text: string
     icon: React.ReactNode,
-    page: Page
+    href: string
 }
 
 const TOP_OPTIONS: MenuOption[] = [
-    { text: "Home", icon: (<HomeRounded />), page: "Home" },
-    { text: "Components", icon: (<MemoryRounded />), page: "Components" },
-    { text: "Projects", icon: (<ConstructionRounded />), page: "Projects" },
-    { text: "Locations", icon: (<LocationOnRounded />), page: "Locations" },
-    { text: "Shipping", icon: (<LocalShippingRounded />), page: "Shipping" },
+    { text: "Home", icon: (<HomeRounded />), href: "/" },
+    { text: "Components", icon: (<MemoryRounded />), href: "/components" },
+    { text: "Projects", icon: (<ConstructionRounded />), href: "/projects" },
+    { text: "Locations", icon: (<LocationOnRounded />), href: "/locations" },
+    { text: "Shipping", icon: (<LocalShippingRounded />), href: "/shipping" },
 ]
 
 const BOT_OPTIONS: MenuOption[] = [
-    { text: "Settings", icon: (<SettingsRounded />), page: "Settings" },
+    { text: "Settings", icon: (<SettingsRounded />), href: "/settings" },
 ]
 
 const SideBar: React.FC = () => {
+    const location = useLocation()
     const [showError, setShowError] = useState(false)
-    const { page, setPage } = useContext(PageContext)
     return (
         <Drawer variant="permanent"
             sx={{
@@ -57,20 +56,24 @@ const SideBar: React.FC = () => {
                     <List dense>
                         {TOP_OPTIONS.map((v, i) => (
                             <ListItem key={i} disablePadding sx={{ display: 'block' }}>
-                                <ListItemButton selected={page == v.page} onClick={() => setPage(v.page)}>
-                                    <ListItemIcon>{v.icon}</ListItemIcon>
-                                    <ListItemText primary={v.text} />
-                                </ListItemButton>
+                                <Link to={v.href}>
+                                    <ListItemButton selected={location.pathname == v.href}>
+                                        <ListItemIcon>{v.icon}</ListItemIcon>
+                                        <ListItemText primary={v.text} />
+                                    </ListItemButton>
+                                </Link>
                             </ListItem>
                         ))}
                     </List>
                     <List dense>
                         {BOT_OPTIONS.map((v, i) => (
                             <ListItem key={i} disablePadding sx={{ display: 'block' }}>
-                                <ListItemButton selected={page == v.page} onClick={() => setPage(v.page)}>
-                                    <ListItemIcon>{v.icon}</ListItemIcon>
-                                    <ListItemText primary={v.text} />
-                                </ListItemButton>
+                                <Link to={v.href}>
+                                    <ListItemButton selected={location.pathname == v.href}>
+                                        <ListItemIcon>{v.icon}</ListItemIcon>
+                                        <ListItemText primary={v.text} />
+                                    </ListItemButton>
+                                </Link>
                             </ListItem>
                         ))}
                     </List>
