@@ -26,6 +26,21 @@ app.get('/:table/all', async c => {
     return c.json(res)
 })
 
+app.get('/components', async c => {
+    const res = await sql`SELECT component.part_num, *,
+        CASE
+            WHEN capacitor.part_num = component.part_num THEN 'Capacitor'
+            WHEN resistor.part_num = component.part_num THEN 'Resistor'
+            WHEN diode.part_num = component.part_num THEN 'Diode'
+            ELSE NULL END AS component_type
+    FROM component
+    LEFT JOIN capacitor USING (part_num)
+    LEFT JOIN resistor USING (part_num)
+    LEFT JOIN diode USING (part_num);`
+
+    return c.json(res);
+});
+
 app.post('/component/create', async c => {
     const body = await c.req.json()
 
@@ -83,7 +98,7 @@ INSERT INTO component (
 // temp endpoint to showcase database tuple edits
 app.put('/component/:part_num/price', async (c) => {
     const { part_num } = c.req.param();
-    const  body  = await c.req.json();
+    const body = await c.req.json();
 
     await sql`
         UPDATE component 
