@@ -2,7 +2,9 @@ import styled from "@emotion/styled"
 import { ConstructionRounded, HomeRounded, LocalShippingRounded, LocationOnRounded, MemoryRounded, MoreVertRounded, SettingsRounded } from "@mui/icons-material"
 import { Avatar, Badge, badgeClasses, Box, drawerClasses, IconButton, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Drawer as MUIDrawer, Stack, Typography } from "@mui/material"
 import type React from "react"
-import { useState } from "react"
+import { useContext, useState } from "react"
+import type { Page } from "../PageContext"
+import PageContext from "../PageContext"
 
 const Drawer = styled(MUIDrawer)({
     width: 240,
@@ -15,20 +17,27 @@ const Drawer = styled(MUIDrawer)({
     }
 })
 
-const TOP_OPTIONS = [
-    { text: "Home", icon: (<HomeRounded />) },
-    { text: "Components", icon: (<MemoryRounded />) },
-    { text: "Projects", icon: (<ConstructionRounded />) },
-    { text: "Locations", icon: (<LocationOnRounded />) },
-    { text: "Shipping", icon: (<LocalShippingRounded />) },
+interface MenuOption {
+    text: string
+    icon: React.ReactNode,
+    page: Page
+}
+
+const TOP_OPTIONS: MenuOption[] = [
+    { text: "Home", icon: (<HomeRounded />), page: "Home" },
+    { text: "Components", icon: (<MemoryRounded />), page: "Components" },
+    { text: "Projects", icon: (<ConstructionRounded />), page: "Projects" },
+    { text: "Locations", icon: (<LocationOnRounded />), page: "Locations" },
+    { text: "Shipping", icon: (<LocalShippingRounded />), page: "Shipping" },
 ]
 
-const BOT_OPTIONS = [
-    { text: "Settings", icon: (<SettingsRounded />) },
+const BOT_OPTIONS: MenuOption[] = [
+    { text: "Settings", icon: (<SettingsRounded />), page: "Settings" },
 ]
 
 const SideBar: React.FC = () => {
     const [showError, setShowError] = useState(false)
+    const { page, setPage } = useContext(PageContext)
     return (
         <Drawer variant="permanent"
             sx={{
@@ -48,7 +57,7 @@ const SideBar: React.FC = () => {
                     <List dense>
                         {TOP_OPTIONS.map((v, i) => (
                             <ListItem key={i} disablePadding sx={{ display: 'block' }}>
-                                <ListItemButton selected={i == 0}>
+                                <ListItemButton selected={page == v.page} onClick={() => setPage(v.page)}>
                                     <ListItemIcon>{v.icon}</ListItemIcon>
                                     <ListItemText primary={v.text} />
                                 </ListItemButton>
@@ -58,7 +67,7 @@ const SideBar: React.FC = () => {
                     <List dense>
                         {BOT_OPTIONS.map((v, i) => (
                             <ListItem key={i} disablePadding sx={{ display: 'block' }}>
-                                <ListItemButton>
+                                <ListItemButton selected={page == v.page} onClick={() => setPage(v.page)}>
                                     <ListItemIcon>{v.icon}</ListItemIcon>
                                     <ListItemText primary={v.text} />
                                 </ListItemButton>
