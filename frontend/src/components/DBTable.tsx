@@ -1,6 +1,7 @@
 import type React from "react"
-import { useEffect, useState } from "react"
-import { TableContainer, Paper, Table, TableCell, TableHead, TableBody, TableRow, Typography, Button } from "@mui/material"
+import { useEffect, useMemo, useState } from "react"
+import { DataGrid } from '@mui/x-data-grid'
+import { Stack, Typography } from "@mui/material"
 
 interface DBTableParams {
     tableName: string
@@ -16,53 +17,38 @@ const DBTable: React.FC<DBTableParams> = ({ tableName, keyColumn, onDelete}) => 
         fetch(`http://localhost:3000/${tableName}/all`)
             .then(res => res.json())
             .then(json => {
-                setVals(json)
+                setVals(json.map((j, i) => ({ id: i, ...j })))
             })
     }, [])
 
-    const keys = Object.keys(vals[0] || {})
+    const columns = useMemo(() => {
+        if (vals.length == 0) return [];
+        return Object.keys(vals[0]).map(k => ({
+            field: k,
+            headerName: k,
+        }))
+    }, [vals])
 
     return (
-        <>
-            <Typography variant="h4">{tableName}</Typography>
-            <TableContainer component={Paper}>
-                <Table sx={{ minWidth: 650 }} aria-label={`${tableName} table`}>
-                    <TableHead>
-                        <TableRow>
-                            {keys.map(k => (
-                                <TableCell>{k}</TableCell>
-                            ))}
-                            {onDelete && <TableCell>Actions</TableCell>}
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {vals.map((row, i) => {
-                            const keyValue = keyColumn ?  String(row[keyColumn]) : undefined
-                            return (
-                                <TableRow key = {keyValue ?? i}>
-                                    {Object.values(row).map((col, cell) => (
-                                        <TableCell key={cell}>{JSON.stringify(col)}</TableCell>
-                                    ))}
-                                    {onDelete && keyValue && (
-                                        <TableCell>
-                                        <Button
-                                            variant="contained"
-                                            // startIcon={<DeleteIcon />}
-                                            color="error"
-                                            size="medium"
-                                            onClick={() => onDelete(keyValue)}
-                                            >
-                                                Delete
-                                            </Button>
-                                    </TableCell>
-                                    )}
-                                </TableRow>
-                            )
-                        })}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-        </>
+        <Stack direction="column">
+            <Typography component="h2" variant="h6">
+                {tableName}
+            </Typography>
+            <DataGrid
+                label={tableName}
+                checkboxSelection
+                rows={vals}
+                columns={columns}
+                disableColumnResize
+                density="compact"
+                slotProps={{
+                    loadingOverlay: {
+                        variant: 'skeleton',
+                        noRowsVariant: 'skeleton'
+                    }
+                }}
+            />
+        </Stack>
     )
 }
 
