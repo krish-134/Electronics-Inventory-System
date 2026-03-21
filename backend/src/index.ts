@@ -122,16 +122,11 @@ app.delete("/:table/:key", async (c) => {
         supplier:   'name',
         project:    'name',
         purchase:   'order_number',
-        // includes:   ''
-        // version
-        // purchaseincludes
-        // location
-        // makes       
     }
 
     const primKey = primaryKeys[table]
     if (!primKey) {
-        return c.json({ error: `Unknown table with no Primary Key given: "${table}`}, 400)
+        return c.json({ error: `Unknown table with no given Primary Key: "${table}`}, 400)
     }
 
     try {
@@ -141,10 +136,51 @@ app.delete("/:table/:key", async (c) => {
             WHERE ${sql(primKey)} = ${key}
         `
     } catch (e: any) {
-        return c.json({ error: `Delete prevented: row information is referenced in another table`}, 409)
+        if (e.code = '23503') {
+            return c.json({ error: `Delete prevented: row information is referenced in another table`}, 409)
+        }
+        return c.json({ error: `Delete failed`}, 500)
     }
 
     return c.json( { deleted: key }, 200)
+});
+
+// Delete for tables with multiple-attribute priary keys
+app.delete("/:table", async (c) => {
+    const { table } = c.req.param();
+    const body = await c.req.json();
+
+    const primaryKeys: Record<string, string[]> = {
+        location:          ['storage_name', 'position', 'facility'],
+        includes:          ['project_name', 'component_part_num'],
+        version:           ['project_name', 'version_number'],
+        purchaseincludes:  ['order_number', 'part_num'],
+        makes:             ['project_name', 'username'],
+    }
+
+    const primKeySet = primaryKeys[table]
+    if (!primKeySet) {
+        return c.json({ error: `Unknown table with no set of given Primary Key: "${table}`}, 400)
+    }
+
+    
+
+    try {
+        await sql`
+            DELETE 
+            FROM ${sql(table)}
+            WHERE ${sql.and(primKeySet.map(primKey => sql`${sql(primKey)} = ${body[primKey]}`))}
+        `
+    } catch (e: any) {
+        if (e.code = '23503') {
+            return c.json({ error: `Delete prevented: row information is referenced in another table`}, 409)
+        }
+        return c.json({ error: `Delete failed`}, 500)
+    }
+
+    return c.json( { deleted: body }, 200)
+
+
 })
 
 
