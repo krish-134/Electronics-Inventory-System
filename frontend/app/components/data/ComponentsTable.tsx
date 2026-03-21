@@ -1,25 +1,27 @@
-import { Avatar, Stack, Typography } from "@mui/material"
+import { Avatar, Button, Popover, Stack, Typography } from "@mui/material"
 import { type GridColDef } from "@mui/x-data-grid"
 import type React from "react"
 import { IconCircuitCapacitor, IconCircuitDiode, IconCircuitResistor } from '@tabler/icons-react'
 import CustomTable from "../CustomTable"
 import { Link } from "react-router"
+import { RichTreeView, TreeViewBaseItem } from '@mui/x-tree-view'
+import { useState } from "react"
 
 const columns: GridColDef[] = [
     {
         "field": "part_num", headerName: "Part #", renderCell: (params) => {
-            console.log(params.row)
-            // TODO: change this to be table-based
-            let icon = null;
+            let icon: React.ReactNode = null;
 
-            const name = (params.value ?? "").toUpperCase();
-
-            if (name.startsWith("DIO")) {
-                icon = (<IconCircuitDiode size="18" color="white" />)
-            } else if (name.startsWith("RES")) {
-                icon = (<IconCircuitResistor size="18" color="white" />)
-            } else if (name.startsWith("CAP")) {
-                icon = (<IconCircuitCapacitor size="18" color="white" />);
+            switch (params.row.component_type) {
+                case "Diode":
+                    icon = (<IconCircuitDiode size="18" color="white" />)
+                    break;
+                case "Resistor":
+                    icon = (<IconCircuitResistor size="18" color="white" />)
+                    break;
+                case "Capacitor":
+                    icon = (<IconCircuitCapacitor size="18" color="white" />);
+                    break;
             }
 
             return (
@@ -37,8 +39,67 @@ const columns: GridColDef[] = [
     { "field": "quantity", headerName: "Quantity" },
     { "field": "voltage_rating", headerName: "Voltage Rating" },
     {
-        "field": "additional", headerName: "Additional Data", renderCell: (params) => {
-            return JSON.stringify(params.field)
+        "field": "additional", headerName: "Additional Data", width: 150, renderCell: (params) => {
+            type Entry = {
+                id: string
+                label: string
+                value: any
+            }
+            const intoTreeEntry = (entry: Entry) => {
+                const { id, label, value } = entry;
+                if (Array.isArray(value)) {
+                    return { id, label, children: value.map((v, i) => intoTreeEntry({
+                        id: `${id}-${i}`,
+                        label: `${i}`,
+                        value: v
+                    })) }
+                } else if (typeof value === "object") {
+                    return { id, label, children: Object.entries(value).map(([k, v], _) => intoTreeEntry({
+                        id: `${id}-${k}`,
+                        label: `${k}`,
+                        value: v
+                    })) }
+                } else {
+                    return { id, label: `${label}: ${value}` }
+                }
+            }
+
+            const items = Object.entries(params.formattedValue).map(([k, v], _) => intoTreeEntry({
+                id: `${k}`,
+                label: `${k}`,
+                value: v
+            }))
+
+            const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
+
+            const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+                setAnchorEl(event.currentTarget)
+            }
+
+            const handleClose = () => {
+                setAnchorEl(null)
+            }
+
+            const open = !!anchorEl
+            const id = open ? 'delete-popover' : undefined
+            return Object.entries(params.formattedValue).length ? (
+                <>
+                    <Button onClick={handleClick} sx={{ height: '1.75rem' }} variant="outlined">
+                        Show
+                    </Button>
+                    <Popover
+                        id={id}
+                        open={open}
+                        anchorEl={anchorEl}
+                        onClose={handleClose}
+                        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                    >
+                        <RichTreeView items={items} />
+                    </Popover>
+                </>
+            ) : (
+                <></>
+            )
         }
     },
     {
