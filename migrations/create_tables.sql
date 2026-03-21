@@ -45,7 +45,7 @@ CREATE TABLE Component (
     package        VARCHAR,
     tolerance      DECIMAL(6,6),
     quantity       INT DEFAULT 0,
-    voltage_rating DECIMAL(8,4),
+    voltage_rating DECIMAL(16,4),
     additional     JSONB,
     
     storage_name   VARCHAR,
@@ -80,7 +80,7 @@ CREATE TABLE Capacitor (
 
 CREATE TABLE Resistor (
     composition VARCHAR,
-    resistance  DECIMAL(8,4) NOT NULL,
+    resistance  DECIMAL(16,4) NOT NULL,
     power       VARCHAR,
 
     part_num    VARCHAR PRIMARY KEY,
@@ -91,9 +91,9 @@ CREATE TABLE Resistor (
 );
 
 CREATE TABLE Diode (
-    capacitance DECIMAL(8,4),
-    vforward    DECIMAL(8,4) NOT NULL,
-    vreverse    DECIMAL(8,4) NOT NULL,
+    capacitance DECIMAL(16,4),
+    vforward    DECIMAL(16,4) NOT NULL,
+    vreverse    DECIMAL(16,4) NOT NULL,
 
     part_num    VARCHAR PRIMARY KEY,
 
