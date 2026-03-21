@@ -62,7 +62,7 @@ const ComponentsTable: React.FC = () => {
         return await fetch(`http://localhost:3000/components`)
             .then(res => res.json())
             .then(json => {
-                return json.map(j => ({ id: j.part_num, ...j }))
+                return json.map((j: any) => ({ id: j.part_num, ...j }))
             })
     }
 
