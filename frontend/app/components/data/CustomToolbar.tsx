@@ -76,11 +76,13 @@ const ExportMenu: React.FC = () => {
 declare module '@mui/x-data-grid' {
     interface ToolbarPropsOverrides {
         rowSelectionModel: GridRowSelectionModel
+        setModalOpen: React.Dispatch<React.SetStateAction<boolean>>
     }
 }
 
 interface ToolbarProps {
     rowSelectionModel: GridRowSelectionModel
+    setModalOpen: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 interface DeleteConfirmProps {
@@ -133,15 +135,15 @@ const DeleteConfirm: React.FC<DeleteConfirmProps> = ({ rowSelectionModel }) => {
     )
 }
 
-const CustomToolbar: React.FC<ToolbarProps> = ({ rowSelectionModel }) => {
+const CustomToolbar: React.FC<ToolbarProps> = ({ rowSelectionModel, setModalOpen }) => {
     const grid = useGridApiContext()
     return (
         <Toolbar>
-            <ToolbarButton>
+            <ToolbarButton onClick={() => setModalOpen(true)}>
                 <Add />
             </ToolbarButton>
             {rowSelectionModel?.ids.size > 0 && (
-                <DeleteConfirm />
+                <DeleteConfirm rowSelectionModel={rowSelectionModel} />
             )}
             <ColumnsPanelTrigger render={<ToolbarButton />}>
                 <GridViewColumnIcon fontSize="small" />
