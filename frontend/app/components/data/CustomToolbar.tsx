@@ -4,6 +4,7 @@ import { Add, Cancel as CancelIcon, PlusOne } from '@mui/icons-material'
 import type React from "react"
 import { useRef, useState } from "react"
 import { IconTrash } from "@tabler/icons-react"
+import { gridAdditionalRowGroupsSelector } from "@mui/x-data-grid/internals"
 
 interface OwnerState {
     expanded: boolean
@@ -104,11 +105,22 @@ const DeleteConfirm: React.FC<DeleteConfirmProps> = ({ rowSelectionModel, tableN
         setAnchorEl(null)
     }
 
+    const grid = useGridApiContext()
+
     const deleteRows = async () => {
-        const ids = [... rowSelectionModel.ids]
+        // const ids = [... rowSelectionModel.ids]
+        let ids: any[]
+
+        if (rowSelectionModel.type === 'exclude') {
+            const everyId = grid.current.getAllRowIds()
+            ids = everyId.filter(id => !rowSelectionModel.ids.has(id))
+        } else {
+            ids = [... rowSelectionModel.ids]
+        }
+ 
         // TODO: delete rows
         await Promise.all(
-            ids.map(id =>
+            ids.map((id: any) =>
                 fetch(`http://localhost:3000/${tableName}/${id}`, { method: "DELETE" })
                 .then(res => {
                     console.log(`DELETE: $ {tableName}/{id} status:`, res.status)
@@ -117,6 +129,7 @@ const DeleteConfirm: React.FC<DeleteConfirmProps> = ({ rowSelectionModel, tableN
             )
         )
 
+        handleClose()
         onDeleteSuccess()
     }
 
@@ -152,18 +165,20 @@ const DeleteConfirm: React.FC<DeleteConfirmProps> = ({ rowSelectionModel, tableN
 
 const CustomToolbar: React.FC<ToolbarProps> = ({ rowSelectionModel, tableName, onDeleteSuccess }) => {
     const grid = useGridApiContext()
+    const isSelected = rowSelectionModel?.ids.size > 0 || rowSelectionModel?.type === 'exclude'
     return (
         <Toolbar>
             <ToolbarButton>
                 <Add />
             </ToolbarButton>
-            {rowSelectionModel?.ids.size > 0 && (
+            {isSelected && (
                 <DeleteConfirm 
                     rowSelectionModel={rowSelectionModel} 
                     tableName={tableName} 
                     onDeleteSuccess={onDeleteSuccess}
                 />
             )}
+            <div style={{ flex: 1 }} />
             <ColumnsPanelTrigger render={<ToolbarButton />}>
                 <GridViewColumnIcon fontSize="small" />
             </ColumnsPanelTrigger>
