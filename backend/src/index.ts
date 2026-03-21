@@ -109,17 +109,42 @@ app.put('/component/:part_num/price', async (c) => {
     return c.json(body, 200)
 });
 
-// hardcoded delete for demonstration
-app.delete("/component/:part_num", async (c) => {
-    const { part_num } = c.req.param();
+// Delete for tables with single-attribute keys
+app.delete("/:table/:key", async (c) => {
+    const { table, key } = c.req.param();
 
-    await sql`
-        DELETE 
-        FROM component
-        WHERE part_num = ${part_num}
-    `;
+    const primaryKeys: Record<string, string> = {
+        component:  'part_num',
+        capacitor:  'part_num',
+        resistor:   'part_num',
+        diode:      'part_num',
+        courier:    'name',
+        supplier:   'name',
+        project:    'name',
+        purchase:   'order_number',
+        // includes:   ''
+        // version
+        // purchaseincludes
+        // location
+        // makes       
+    }
 
-    return c.json(part_num, 200)
+    const primKey = primaryKeys[table]
+    if (!primKey) {
+        return c.json({ error: `Unknown table with no Primary Key given: "${table}`}, 400)
+    }
+
+    try {
+        await sql`
+            DELETE 
+            FROM ${sql(table)}
+            WHERE ${sql(primKey)} = ${key}
+        `
+    } catch (e: any) {
+        return c.json({ error: `Delete prevented: row information is referenced in another table`}, 409)
+    }
+
+    return c.json( { deleted: key }, 200)
 })
 
 

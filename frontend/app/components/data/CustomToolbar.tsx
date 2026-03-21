@@ -1,4 +1,4 @@
-import { Button, ButtonGroup, InputAdornment, Menu, MenuItem, Popover, Stack, styled, TextField, Tooltip, Typography } from "@mui/material"
+import { Button, ButtonGroup, InputAdornment, Menu, MenuItem, Popover, Stack, styled, tableBodyClasses, TextField, Tooltip, Typography } from "@mui/material"
 import { ColumnsPanelTrigger, ExportCsv, ExportPrint, FilterPanelTrigger, GridDownloadIcon, GridFilterListIcon, GridRowSelectionModel, GridSearchIcon, GridToolbarColumnsButton, GridViewColumnIcon, QuickFilter, QuickFilterClear, QuickFilterControl, QuickFilterTrigger, Toolbar, ToolbarButton, useGridApiContext } from "@mui/x-data-grid"
 import { Add, Cancel as CancelIcon, PlusOne } from '@mui/icons-material'
 import type React from "react"
@@ -76,18 +76,24 @@ const ExportMenu: React.FC = () => {
 declare module '@mui/x-data-grid' {
     interface ToolbarPropsOverrides {
         rowSelectionModel: GridRowSelectionModel
+        tableName: string
+        onDeleteSuccess: () => void
     }
 }
 
 interface ToolbarProps {
     rowSelectionModel: GridRowSelectionModel
+    tableName: string
+    onDeleteSuccess: () => void
 }
 
 interface DeleteConfirmProps {
     rowSelectionModel: GridRowSelectionModel
+    tableName: string
+    onDeleteSuccess: () => void
 }
 
-const DeleteConfirm: React.FC<DeleteConfirmProps> = ({ rowSelectionModel }) => {
+const DeleteConfirm: React.FC<DeleteConfirmProps> = ({ rowSelectionModel, tableName, onDeleteSuccess }) => {
     const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -98,9 +104,20 @@ const DeleteConfirm: React.FC<DeleteConfirmProps> = ({ rowSelectionModel }) => {
         setAnchorEl(null)
     }
 
-    const deleteRows = () => {
-        const ids = rowSelectionModel.ids
+    const deleteRows = async () => {
+        const ids = [... rowSelectionModel.ids]
         // TODO: delete rows
+        await Promise.all(
+            ids.map(id =>
+                fetch(`http://localhost:3000/${tableName}/${id}`, { method: "DELETE" })
+                .then(res => {
+                    console.log(`DELETE: $ {tableName}/{id} status:`, res.status)
+                    return res
+                })
+            )
+        )
+
+        onDeleteSuccess()
     }
 
     const open = !!anchorEl
@@ -133,7 +150,7 @@ const DeleteConfirm: React.FC<DeleteConfirmProps> = ({ rowSelectionModel }) => {
     )
 }
 
-const CustomToolbar: React.FC<ToolbarProps> = ({ rowSelectionModel }) => {
+const CustomToolbar: React.FC<ToolbarProps> = ({ rowSelectionModel, tableName, onDeleteSuccess }) => {
     const grid = useGridApiContext()
     return (
         <Toolbar>
@@ -141,7 +158,11 @@ const CustomToolbar: React.FC<ToolbarProps> = ({ rowSelectionModel }) => {
                 <Add />
             </ToolbarButton>
             {rowSelectionModel?.ids.size > 0 && (
-                <DeleteConfirm />
+                <DeleteConfirm 
+                    rowSelectionModel={rowSelectionModel} 
+                    tableName={tableName} 
+                    onDeleteSuccess={onDeleteSuccess}
+                />
             )}
             <ColumnsPanelTrigger render={<ToolbarButton />}>
                 <GridViewColumnIcon fontSize="small" />
