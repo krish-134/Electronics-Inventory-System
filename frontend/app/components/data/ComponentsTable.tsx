@@ -62,7 +62,7 @@ const ComponentsTable: React.FC = () => {
         return await fetch(`http://localhost:3000/components`)
             .then(res => res.json())
             .then(json => {
-                return json.map((j, i) => ({ id: i, ...j }))
+                return json.map(j => ({ id: j.part_num, ...j }))
             })
     }
 
@@ -71,7 +71,7 @@ const ComponentsTable: React.FC = () => {
             <Typography component="h2" variant="h6">
                 Components
             </Typography>
-            <CustomTable label="Components" getData={getData} columns={columns} />
+            <CustomTable label="Components" getData={getData} columns={columns} tableName="component" />
         </Stack>
     )
 }

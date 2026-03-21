@@ -7,9 +7,10 @@ interface CustomTableProps {
     label: string
     getData: () => Promise<readonly any[] | undefined>
     columns: GridColDef[]
+    tableName: string
 }
 
-const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns }) => {
+const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns, tableName }) => {
     const [vals, setVals] = useState<readonly any[] | undefined>([])
     const [rowSelectionModel, setRowSelectionModel] = useState<GridRowSelectionModel>()
 
@@ -35,8 +36,10 @@ const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns }) =>
                     noRowsVariant: 'skeleton'
                 },
                 toolbar: {
-                    rowSelectionModel
-                }
+                    rowSelectionModel,
+                    tableName,
+                    onDeleteSuccess: () => getData().then(setVals)
+                } as any
             }}
             rowSelectionModel={rowSelectionModel}
             onRowSelectionModelChange={setRowSelectionModel}
