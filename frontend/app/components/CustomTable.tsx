@@ -4,6 +4,8 @@ import { useEffect, useState } from "react"
 import CustomToolbar from "./data/CustomToolbar"
 import { Modal, Stack } from "@mui/material"
 
+type Row = readonly any[]
+
 interface CustomTableProps {
     label: string
     getData: () => Promise<readonly any[] | undefined>
@@ -14,18 +16,23 @@ interface CustomTableProps {
 export interface AddCardProps {
     label: string
     setModalOpen: React.Dispatch<React.SetStateAction<boolean>>
+    handleAdd: (r: Row) => void
 }
 
 const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns, AddCard }) => {
-    const [vals, setVals] = useState<readonly any[] | undefined>([])
+    const [rows, setRows] = useState<Row | undefined>([])
     const [rowSelectionModel, setRowSelectionModel] = useState<GridRowSelectionModel>()
     const [modalOpen, setModalOpen] = useState(false)
 
     useEffect(() => {
-        getData().then(setVals)
+        getData().then(setRows)
     }, [])
 
     const handleModalClose = () => {
+    }
+
+    const handleAdd = (r: Row) => {
+        setRows(oldRows => [...(oldRows ?? []), { id: rows?.length, ...r }])
     }
 
     return (
@@ -35,13 +42,13 @@ const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns, AddC
                 aria-labelledby=""
                 aria-describedby="">
                 <Stack justifyContent="center" alignItems="center" height="100%" width="100%">
-                    <AddCard label={label} setModalOpen={setModalOpen} />
+                    <AddCard label={label} setModalOpen={setModalOpen} handleAdd={handleAdd} />
                 </Stack>
             </Modal>
             <DataGrid
                 label={label}
                 checkboxSelection
-                rows={vals}
+                rows={rows}
                 columns={columns}
                 disableColumnResize
                 density="compact"
