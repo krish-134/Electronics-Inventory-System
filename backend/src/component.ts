@@ -10,9 +10,9 @@ app.get('/', async c => {
 app.get('/components', async c => {
     const res = await sql`SELECT component.part_num, *,
         CASE
-            WHEN capacitor.part_num = component.part_num THEN 'Capacitor'
-            WHEN resistor.part_num = component.part_num THEN 'Resistor'
-            WHEN diode.part_num = component.part_num THEN 'Diode'
+            WHEN capacitor.part_num = component.part_num THEN 'capacitor'
+            WHEN resistor.part_num = component.part_num THEN 'resistor'
+            WHEN diode.part_num = component.part_num THEN 'diode'
             ELSE NULL END AS component_type
     FROM component
     LEFT JOIN capacitor USING (part_num)

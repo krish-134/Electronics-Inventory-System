@@ -4,8 +4,8 @@ import type React from "react"
 import { IconCircuitCapacitor, IconCircuitDiode, IconCircuitResistor } from '@tabler/icons-react'
 import CustomTable, { AddCardProps } from "../CustomTable"
 import { Link } from "react-router"
-import { RichTreeView, TreeViewBaseItem } from '@mui/x-tree-view'
-import { useEffect, useState } from "react"
+import { RichTreeView } from '@mui/x-tree-view'
+import { useEffect, useMemo, useState } from "react"
 import { Location, Supplier } from "../../types"
 
 const columns: GridColDef[] = [
@@ -13,14 +13,14 @@ const columns: GridColDef[] = [
         "field": "part_num", headerName: "Part #", renderCell: (params) => {
             let icon: React.ReactNode = null;
 
-            switch (params.row.component_type) {
-                case "Diode":
+            switch (params.row.component_type.toLowerCase()) {
+                case "diode":
                     icon = (<IconCircuitDiode size="18" color="white" />)
                     break;
-                case "Resistor":
+                case "resistor":
                     icon = (<IconCircuitResistor size="18" color="white" />)
                     break;
-                case "Capacitor":
+                case "capacitor":
                     icon = (<IconCircuitCapacitor size="18" color="white" />);
                     break;
             }
@@ -125,7 +125,7 @@ const columns: GridColDef[] = [
     },
 ]
 
-const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen }) => {
+const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => {
     const [storageOptions, setStorageOptions] = useState<Location[]>([])
     const [supplierOptions, setSupplierOptions] = useState<Supplier[]>([])
 
@@ -137,7 +137,7 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen }) => {
     const [tolerance, setTolerance] = useState<string>("")
     const [quantity, setQuantity] = useState<string>("")
     const [voltageRating, setVoltageRating] = useState<string>("")
-    const [additional, setAdditional] = useState<string>("")
+    const [additional, setAdditional] = useState<string>("{}")
     const [storage, setStorage] = useState<Location>()
     const [supplier, setSupplier] = useState<Supplier>()
 
@@ -186,25 +186,33 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen }) => {
             break
     }
 
+    const newRow = useMemo(() => ({
+        part_num: partNum,
+        price,
+        name,
+        package: pkg,
+        tolerance,
+        quantity,
+        voltage_rating: voltageRating,
+        additional: JSON.parse(additional), // TODO: error checking
+        storage_name: storage?.storage_name,
+        facility: storage?.facility,
+        position: storage?.position,
+        supplier_name: supplier?.name,
+        component_type: componentType,
+        ...additionalOpts
+    }), [partNum, price, name, pkg, tolerance, quantity, voltageRating, additional, storage, supplier, additionalOpts])
+
     const handleCreate = () => {
         fetch(`http://localhost:3000/component/${componentType}`, {
             method: 'POST',
-            body: JSON.stringify({
-                part_num: partNum,
-                price,
-                name,
-                package: pkg,
-                tolerance,
-                quantity,
-                voltage_rating: voltageRating,
-                additional: JSON.parse(additional), // TODO: error checking
-                storage_name: storage?.storage_name,
-                facility: storage?.facility,
-                position: storage?.position,
-                supplier_name: supplier!.name,
-                ...additionalOpts
-            })
-        }).finally(() => setModalOpen(false))
+            body: JSON.stringify(newRow)
+        }).then(res => {
+            if (Math.floor(res.status / 100) == 2) {
+                setModalOpen(false)
+                handleAdd(newRow)
+            }
+        })
     }
 
     return (
