@@ -253,7 +253,6 @@ const ComponentsTable: React.FC = () => {
     }, [])
 
     const mutateRow = useCallback(async (row, oldRow) => {
-        // TODO: persist in DB
         await fetch(`http://localhost:3000/component/${oldRow.part_num}`, { method: "PUT", body: JSON.stringify(row) });
         return row
     }, [])

@@ -4,7 +4,10 @@ import sql from './db/db'
 const app = new Hono()
 
 app.get('/', async c => {
-    const res = await sql`SELECT component.part_num, *,
+    const { type } = c.req.query();
+
+    const res = await sql`SELECT * FROM (
+        SELECT component.part_num, *,
         CASE
             WHEN capacitor.part_num = component.part_num THEN 'capacitor'
             WHEN resistor.part_num = component.part_num THEN 'resistor'
@@ -13,7 +16,8 @@ app.get('/', async c => {
     FROM component
     LEFT JOIN capacitor USING (part_num)
     LEFT JOIN resistor USING (part_num)
-    LEFT JOIN diode USING (part_num);`
+    LEFT JOIN diode USING (part_num))
+    WHERE (${type ?? null}::text IS NULL OR component_type = ${type ?? null});`
 
     return c.json(res);
 });
@@ -83,7 +87,7 @@ INSERT INTO component (
         case "diode":
             const { vforward, vreverse, capacitance } = body
             await sql`
-            INSERT INTO diode (part_num, vforward, vreverse, capacitance) VALUES (${part_num}, ${vforward}, ${vreverse}, ${capacitance ?? null});
+            INSERT INTO diode (part_num, vforward, vreverse, dcapacitance) VALUES (${part_num}, ${vforward}, ${vreverse}, ${capacitance ?? null});
             `
             break
     }
@@ -133,11 +137,11 @@ UPDATE resistor SET power=${power ?? null}, resistance=${resistance}, compositio
 `
     const { type: res_type, capacitance, temp_coeff } = body
     await sql`
-UPDATE capacitor SET type=${res_type ?? null}, temp_coeff=${temp_coeff ?? null}, capacitance=${capacitance};
+UPDATE capacitor SET type=${res_type ?? null}, temp_coeff=${temp_coeff ?? null}, capacitance=${capacitance} WHERE part_num=${new_part_num};
 `
     const { vforward, vreverse, capacitance: diode_capacitance } = body
     await sql`
-UPDATE diode SET vforward=${vforward}, vreverse=${vreverse}, capacitance=${diode_capacitance ?? null};
+UPDATE diode SET vforward=${vforward}, vreverse=${vreverse}, dcapacitance=${diode_capacitance ?? null} WHERE part_num=${new_part_num};
 `
 
     return c.json(part_num, 200)
