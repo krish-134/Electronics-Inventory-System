@@ -74,7 +74,7 @@ const Locations: React.FC = () => {
     const [selectedAttribute, setSelectedAttribute] = useState<string>("");
     const [queriedValue, setQueriedValue] = useState<number>();
 
-    const [placeholderText, setPlaceholderText] = useState<string>();
+    const [errorText, setErrorText] = useState<string>();
 
     const [returned, setReturned] = useState<object[]>([]);
     const [tableKeys, setTableKeys] = useState<string[]>([]);
@@ -88,7 +88,7 @@ const Locations: React.FC = () => {
 
     function request() {
         if (!selectedAttribute || !selectedOperator || selectedColumns.length <= 0) {
-            setPlaceholderText("Missing required fields!");
+            setErrorText("Missing required fields!");
             return;
         };
 
@@ -96,7 +96,7 @@ const Locations: React.FC = () => {
         fetch(`http://localhost:3000/location${queryParams}`)
             .then(res => res.json())
             .then(data => setReturned(data))
-            .then(_ => {if (!returned.length) setPlaceholderText("No results found with these restrictions!")})
+            .then(_ => {if (!returned.length) setErrorText("No results found with these restrictions!")})
             .catch(err => console.error(err));
     }
 
@@ -223,7 +223,7 @@ const Locations: React.FC = () => {
                     </TableContainer>
                     :
                     <p className="w-2/3 justify-self-center text-red-400">
-                        {placeholderText}
+                        {errorText}
                     </p>
                 }
             </div>
