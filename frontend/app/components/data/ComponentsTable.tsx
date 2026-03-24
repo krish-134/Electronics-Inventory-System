@@ -1,16 +1,18 @@
 import { Avatar, Button, Card, CardActions, CardContent, Divider, FormControl, InputLabel, MenuItem, Popover, Select, Stack, TextField, Typography } from "@mui/material"
-import { type GridColDef } from "@mui/x-data-grid"
+import { GridEditLongTextCell, GridRenderEditCellParams, type GridColDef } from "@mui/x-data-grid"
 import type React from "react"
 import { IconCircuitCapacitor, IconCircuitDiode, IconCircuitResistor } from '@tabler/icons-react'
 import CustomTable, { AddCardProps } from "../CustomTable"
 import { Link } from "react-router"
 import { RichTreeView } from '@mui/x-tree-view'
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { Location, Supplier } from "../../types"
+import JsonEditComponent from "../JsonEditComponent"
+import JsonViewComponent from "../JsonViewComponent"
 
 const columns: GridColDef[] = [
     {
-        "field": "part_num", headerName: "Part #", renderCell: (params) => {
+        "field": "part_num", headerName: "Part #", editable: true, renderCell: (params) => {
             let icon: React.ReactNode = null;
 
             switch (params.row.component_type.toLowerCase()) {
@@ -33,91 +35,29 @@ const columns: GridColDef[] = [
             )
         }
     },
-    { "field": "price", headerName: "Price" },
-    { "field": "name", headerName: "Name" },
-    { "field": "package", headerName: "Package" },
-    { "field": "tolerance", headerName: "Tolerance", valueFormatter: (v) => parseFloat(v).toFixed(3) },
-    { "field": "quantity", headerName: "Quantity" },
-    { "field": "voltage_rating", headerName: "Voltage Rating", valueFormatter: (v) => parseFloat(v).toFixed(2) },
+    { "field": "price", headerName: "Price", editable: true, type: "number" },
+    { "field": "name", headerName: "Name", editable: true },
+    { "field": "package", headerName: "Package", editable: true },
+    { "field": "tolerance", headerName: "Tolerance", editable: true, type: "number", valueFormatter: (v) => parseFloat(v).toFixed(3) },
+    { "field": "quantity", headerName: "Quantity", editable: true, type: "number" },
+    { "field": "voltage_rating", headerName: "Voltage Rating", editable: true, type: "number", valueFormatter: (v) => parseFloat(v).toFixed(2) },
     {
-        "field": "additional", headerName: "Additional Data", width: 150, sortable: false, filterable: false, renderCell: (params) => {
-            type Entry = {
-                id: string
-                label: string
-                value: any
-            }
-            const intoTreeEntry = (entry: Entry) => {
-                const { id, label, value } = entry;
-                if (Array.isArray(value)) {
-                    return {
-                        id, label, children: value.map((v, i) => intoTreeEntry({
-                            id: `${id}-${i}`,
-                            label: `${i}`,
-                            value: v
-                        }))
-                    }
-                } else if (typeof value === "object") {
-                    return {
-                        id, label, children: Object.entries(value).map(([k, v], _) => intoTreeEntry({
-                            id: `${id}-${k}`,
-                            label: `${k}`,
-                            value: v
-                        }))
-                    }
-                } else {
-                    return { id, label: `${label}: ${value}` }
-                }
-            }
-
-            const hasValue = params.formattedValue && Object.entries(params.formattedValue).length > 0
-
-            const items = hasValue ? Object.entries(params.formattedValue).map(([k, v], _) => intoTreeEntry({
-                id: `${k}`,
-                label: `${k}`,
-                value: v
-            })) : undefined
-
-            const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
-
-            const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-                setAnchorEl(event.currentTarget)
-            }
-
-            const handleClose = () => {
-                setAnchorEl(null)
-            }
-
-            const open = !!anchorEl
-            const id = open ? 'delete-popover' : undefined
-            return hasValue ? (
-                <>
-                    <Button onClick={handleClick} sx={{ height: '1.75rem' }} variant="outlined">
-                        Show
-                    </Button>
-                    <Popover
-                        id={id}
-                        open={open}
-                        anchorEl={anchorEl}
-                        onClose={handleClose}
-                        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-                    >
-                        <RichTreeView items={items!} />
-                    </Popover>
-                </>
-            ) : (
-                <></>
-            )
-        }
+        "field": "additional", headerName: "Additional Data", type: "longText", editable: true, width: 150, sortable: false, filterable: false, renderCell: (params) => (
+            <JsonViewComponent {...params} />
+        ),
+        renderEditCell: (params: GridRenderEditCellParams) => (
+            <JsonEditComponent {...params} />
+        )
     },
     {
-        "field": "storage_name", headerName: "Storage", renderCell: (params) => (
+        "field": "storage_name", headerName: "Storage", editable: true, renderCell: (params) => (
             <Link to={`/locations#${params.value}`}>
                 {params.formattedValue}
             </Link>
         )
     },
     {
-        "field": "supplier_name", headerName: "Supplier", renderCell: (params) => (
+        "field": "supplier_name", headerName: "Supplier", editable: true, renderCell: (params) => (
             <Link to={`/shipping#supplier-${params.value}`}>
                 {params.formattedValue}
             </Link>
@@ -216,7 +156,7 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
     }
 
     return (
-        <Card variant="outlined" sx={{ width: '50%', minWidth: '600px', maxWidth: '1000px' }}>
+        <Card variant="outlined" sx={{ bgcolor: 'background.paper', width: '50%', minWidth: '600px', maxWidth: '1000px' }}>
             <CardContent>
                 <Typography variant="h3">{label}</Typography>
                 <Stack direction="column" gap={2} sx={{ pt: 1 }}>
@@ -304,20 +244,32 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
 }
 
 const ComponentsTable: React.FC = () => {
-    const getData = async () => {
-        return await fetch(`http://localhost:3000/components`)
+    const getData = useCallback(async () => {
+        return await fetch(`http://localhost:3000/component`)
             .then(res => res.json())
             .then(json => {
                 return json.map((j, i) => ({ id: i, ...j }))
             })
-    }
+    }, [])
+
+    const mutateRow = useCallback(async (row, oldRow) => {
+        // TODO: persist in DB
+        await fetch(`http://localhost:3000/component/${oldRow.part_num}`, { method: "PUT", body: JSON.stringify(row) });
+        return row
+    }, [])
 
     return (
         <Stack direction="column">
             <Typography component="h2" variant="h6">
                 Components
             </Typography>
-            <CustomTable label="Components" getData={getData} columns={columns} AddCard={AddCard} />
+            <CustomTable
+                label="Components"
+                getData={getData}
+                columns={columns}
+                AddCard={AddCard}
+                mutateRow={mutateRow}
+            />
         </Stack>
     )
 }

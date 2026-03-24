@@ -4,10 +4,6 @@ import sql from './db/db'
 const app = new Hono()
 
 app.get('/', async c => {
-    return c.json(await sql`SELECT * FROM component`)
-})
-
-app.get('/components', async c => {
     const res = await sql`SELECT component.part_num, *,
         CASE
             WHEN capacitor.part_num = component.part_num THEN 'capacitor'
@@ -22,7 +18,7 @@ app.get('/components', async c => {
     return c.json(res);
 });
 
-app.post('/component/:component_type', async c => {
+app.post('/:component_type', async c => {
     const { component_type } = c.req.param()
     const body = await c.req.json()
 
@@ -93,6 +89,58 @@ INSERT INTO component (
     }
 
     return c.json(body, 200)
+})
+
+app.put('/:part_num', async c => {
+    const { part_num } = c.req.param();
+    const body = await c.req.json()
+    console.log(part_num, body)
+
+    const {
+        part_num: new_part_num,
+        price,
+        name,
+        package: pkg,
+        tolerance,
+        quantity,
+        voltage_rating,
+        additional,
+        storage_name,
+        position,
+        facility,
+        supplier_name
+    } = body;
+
+    await sql`
+UPDATE component SET
+    part_num = ${new_part_num},
+    price = ${price ?? null},
+    name = ${name},
+    package = ${pkg ?? null},
+    tolerance = ${tolerance ?? null},
+    quantity = ${quantity ?? null},
+    voltage_rating = ${voltage_rating ?? null},
+    additional = ${additional ?? null},
+    storage_name = ${storage_name ?? null},
+    position = ${position ?? null},
+    facility = ${facility ?? null},
+    supplier_name = ${supplier_name ?? null}
+WHERE part_num = ${part_num};`
+
+    const { power, resistance, composition } = body
+    await sql`
+UPDATE resistor SET power=${power ?? null}, resistance=${resistance}, composition=${composition ?? null} WHERE part_num=${new_part_num};
+`
+    const { type: res_type, capacitance, temp_coeff } = body
+    await sql`
+UPDATE capacitor SET type=${res_type ?? null}, temp_coeff=${temp_coeff ?? null}, capacitance=${capacitance};
+`
+    const { vforward, vreverse, capacitance: diode_capacitance } = body
+    await sql`
+UPDATE diode SET vforward=${vforward}, vreverse=${vreverse}, capacitance=${diode_capacitance ?? null};
+`
+
+    return c.json(part_num, 200)
 })
 
 app.delete("/:part_num", async (c) => {

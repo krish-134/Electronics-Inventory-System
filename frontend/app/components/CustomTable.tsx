@@ -1,26 +1,27 @@
-import { DataGrid, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid"
+import { DataGrid, GridColDef, GridRowModel, GridRowSelectionModel } from "@mui/x-data-grid"
 import type React from "react"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import CustomToolbar from "./data/CustomToolbar"
 import { Modal, Stack } from "@mui/material"
 
-type Row = readonly any[]
+type Rows = readonly any[]
 
 interface CustomTableProps {
     label: string
     getData: () => Promise<readonly any[] | undefined>
     columns: GridColDef[]
     AddCard: React.FC<AddCardProps>
+    mutateRow: (row: any) => any // TODO: figure out types
 }
 
 export interface AddCardProps {
     label: string
     setModalOpen: React.Dispatch<React.SetStateAction<boolean>>
-    handleAdd: (r: Row) => void
+    handleAdd: (r: Rows) => void
 }
 
-const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns, AddCard }) => {
-    const [rows, setRows] = useState<Row | undefined>([])
+const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns, AddCard, mutateRow }) => {
+    const [rows, setRows] = useState<Rows | undefined>([])
     const [rowSelectionModel, setRowSelectionModel] = useState<GridRowSelectionModel>()
     const [modalOpen, setModalOpen] = useState(false)
 
@@ -31,9 +32,21 @@ const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns, AddC
     const handleModalClose = () => {
     }
 
-    const handleAdd = (r: Row) => {
+    const handleAdd = (r: Rows) => {
         setRows(oldRows => [...(oldRows ?? []), { id: rows?.length, ...r }])
     }
+
+    const processUpdate = useCallback(async (newRow: any, oldRow: any) => {
+        const response = await mutateRow(newRow, oldRow);
+        // TODO: better feedback
+        return response;
+    }, [mutateRow])
+
+    const handleProcessRowUpdateError = useCallback(err => {
+        // TODO: better feedback
+        // alert(err)
+        console.error(err)
+    }, []);
 
     return (
         <>
@@ -68,6 +81,8 @@ const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns, AddC
                 }}
                 rowSelectionModel={rowSelectionModel}
                 onRowSelectionModelChange={setRowSelectionModel}
+                processRowUpdate={processUpdate}
+                onProcessRowUpdateError={handleProcessRowUpdateError}
             />
         </>
     )

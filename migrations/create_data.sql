@@ -76,6 +76,7 @@ CREATE TABLE Capacitor (
     FOREIGN KEY (part_num)
         REFERENCES Component(part_num)
         ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
 
 CREATE TABLE Resistor (
@@ -88,6 +89,7 @@ CREATE TABLE Resistor (
     FOREIGN KEY (part_num)
         REFERENCES Component(part_num)
         ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
 
 CREATE TABLE Diode (
@@ -100,6 +102,7 @@ CREATE TABLE Diode (
     FOREIGN KEY (part_num)
         REFERENCES Component(part_num)
         ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
 
 ------------------------------------------------------------  
@@ -160,7 +163,8 @@ CREATE TABLE PurchaseIncludes (
 
     FOREIGN KEY (part_num)
         REFERENCES Component(part_num)
-        ON DELETE NO ACTION,
+        ON DELETE NO ACTION
+        ON UPDATE CASCADE,
 
     PRIMARY KEY (order_number, part_num)
 );
@@ -180,6 +184,7 @@ CREATE TABLE Includes (
     FOREIGN KEY (component_part_num) 
         REFERENCES Component(part_num)
         ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
 
 CREATE TABLE Makes (
