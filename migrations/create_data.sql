@@ -93,7 +93,7 @@ CREATE TABLE Resistor (
 );
 
 CREATE TABLE Diode (
-    capacitance DECIMAL(16,4),
+    dcapacitance DECIMAL(16,4),
     vforward    DECIMAL(16,4) NOT NULL,
     vreverse    DECIMAL(16,4) NOT NULL,
 
@@ -255,7 +255,7 @@ INSERT INTO Resistor (composition, resistance, power, part_num) VALUES
 ('Thick Film', 1000, '0.1W', 'RES-1K');
 
 -- Diode --
-INSERT INTO Diode (capacitance, vforward, vreverse, part_num) VALUES 
+INSERT INTO Diode (dcapacitance, vforward, vreverse, part_num) VALUES 
 (4.0000, 1.0000, 100.0000, 'DIO-1N4148');
 
 -- Courier --

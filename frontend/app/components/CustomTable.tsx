@@ -10,8 +10,8 @@ interface CustomTableProps {
     label: string
     getData: () => Promise<readonly any[] | undefined>
     columns: GridColDef[]
-    AddCard: React.FC<AddCardProps>
-    mutateRow: (row: any) => any // TODO: figure out types
+    AddCard?: React.FC<AddCardProps>
+    mutateRow: (row: any, oldRow: any) => any // TODO: figure out types
 }
 
 export interface AddCardProps {
@@ -50,14 +50,16 @@ const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns, AddC
 
     return (
         <>
-            <Modal open={modalOpen}
-                onClose={handleModalClose}
-                aria-labelledby=""
-                aria-describedby="">
-                <Stack justifyContent="center" alignItems="center" height="100%" width="100%">
-                    <AddCard label={label} setModalOpen={setModalOpen} handleAdd={handleAdd} />
-                </Stack>
-            </Modal>
+            {AddCard && (
+                <Modal open={modalOpen}
+                    onClose={handleModalClose}
+                    aria-labelledby=""
+                    aria-describedby="">
+                    <Stack justifyContent="center" alignItems="center" height="100%" width="100%">
+                        <AddCard label={label} setModalOpen={setModalOpen} handleAdd={handleAdd} />
+                    </Stack>
+                </Modal>
+            )}
             <DataGrid
                 label={label}
                 checkboxSelection
@@ -76,7 +78,8 @@ const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns, AddC
                     },
                     toolbar: {
                         rowSelectionModel,
-                        setModalOpen
+                        setModalOpen,
+                        allowAdd: !!AddCard
                     }
                 }}
                 rowSelectionModel={rowSelectionModel}
