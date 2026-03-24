@@ -14,7 +14,8 @@ app.get('/', async c => {
     }
     
     const columns = fields.split(',');
-    // i spent a while trying to make op inline, but this is the only thing that worked
+    
+    // op doesn't work when inlined with sql() for some reason
     switch (op) {
         case "e":
             return c.json(await sql`SELECT DISTINCT ${sql(columns)} FROM location l NATURAL JOIN component c WHERE ${sql(`c.${atr}`)} = ${val}`);
