@@ -7,7 +7,7 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent, selectClasses } from '@mui/material/Select';
 import Button from "@mui/material/Button";
-import { Box, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from "@mui/material";
+import { Box, Chip, Divider, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from "@mui/material";
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -74,21 +74,29 @@ const Locations: React.FC = () => {
     const [selectedAttribute, setSelectedAttribute] = useState<string>("");
     const [queriedValue, setQueriedValue] = useState<number>();
 
+    const [placeholderText, setPlaceholderText] = useState<string>();
+
     const [returned, setReturned] = useState<object[]>([]);
     const [tableKeys, setTableKeys] = useState<string[]>([]);
 
     useEffect(() => {
-        if (returned.length < 1) return;
+        if (!returned.length) {
+            return;
+        };
         setTableKeys(Object.keys(returned[0]));
     }, [returned]);
 
     function request() {
-        if (!selectedAttribute || !selectedOperator || selectedColumns.length <= 0) return;
+        if (!selectedAttribute || !selectedOperator || selectedColumns.length <= 0) {
+            setPlaceholderText("Missing required fields!");
+            return;
+        };
 
         const queryParams = `?fields=${selectedColumns.join(',')}&atr=${selectedAttribute}&op=${selectedOperator}&val=${queriedValue}`;
         fetch(`http://localhost:3000/location${queryParams}`)
             .then(res => res.json())
             .then(data => setReturned(data))
+            .then(_ => {if (!returned.length) setPlaceholderText("No results found with these restrictions!")})
             .catch(err => console.error(err));
     }
 
@@ -108,6 +116,9 @@ const Locations: React.FC = () => {
                 <p>
                     Use this page to find the locations of your components, as well as extra details about it and its placement.
                 </p>
+
+                <Divider sx={{ mb: 3 }}/>
+
                 <p>
                     Find the location of my components where
                 </p>
@@ -149,15 +160,16 @@ const Locations: React.FC = () => {
                             type="number" 
                             onChange={e => setQueriedValue(e.target.value as any)} 
                             value={queriedValue}
+                            sx={{ width: 200 }}
                         />
                     </FormControl>
                 </div>
 
-                <p>
+                <p className="-mt-1">
                     and only show
                 </p>
 
-                <FormControl sx={{ mb: 3, width: 400 }}>
+                <FormControl sx={{ mb: 3, width: 550 }}>
                     <InputLabel id="demo-multiple-name-label">Columns</InputLabel>
                     <Select
                         labelId="demo-multiple-name-label"
@@ -187,16 +199,16 @@ const Locations: React.FC = () => {
                     </Select>
                 </FormControl>
                 
-                <Button onClick={request} sx={{ justifySelf: "left", width: 200, border: 1}}>Find my parts!</Button>
+                <Button onClick={request} sx={{ justifySelf: "left", width: 200, border: 1, mb: 1}}>Find my parts!</Button>
             </div>
             <div className="w-3/4">
-                {returned.length > 0 &&
+                {returned.length > 0 ?
                     <TableContainer component={Paper}>
-                        <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                        <Table aria-label="simple table">
                             <TableHead>
-                            <TableRow>
-                                {tableKeys.map(tk => <TableCell>{formatString(tk)}</TableCell>)}
-                            </TableRow>
+                                <TableRow>
+                                    {tableKeys.map(tk => <TableCell>{formatString(tk)}</TableCell>)}
+                                </TableRow>
                             </TableHead>
                             <TableBody>
                                 {returned.map((tup) => (
@@ -209,6 +221,10 @@ const Locations: React.FC = () => {
                             </TableBody>
                         </Table>
                     </TableContainer>
+                    :
+                    <p className="w-2/3 justify-self-center text-red-400">
+                        {placeholderText}
+                    </p>
                 }
             </div>
         </>
