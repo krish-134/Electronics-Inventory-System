@@ -15,8 +15,8 @@ const columns: GridColDef[] = [
         )
     },
     { "field": "capacitance", headerName: "Capacitance", editable: true, type: "number" },
-    { "field": "type", headerName: "Type", editable: true, type: "number" },
-    { "field": "temp_coeff", headerName: "Temperature Coefficient", editable: true },
+    { "field": "type", headerName: "Type", editable: true },
+    { "field": "temp_coeff", headerName: "Temperature Coefficient", editable: true, type: "number" },
 ]
 
 const CapacitorTable: React.FC = () => {

@@ -1,21 +1,23 @@
-import { Avatar, Button, Card, CardActions, CardContent, Divider, FormControl, InputLabel, MenuItem, Popover, Select, Stack, TextField, Typography } from "@mui/material"
-import { GridEditLongTextCell, GridRenderEditCellParams, type GridColDef } from "@mui/x-data-grid"
+import { Avatar, Button, Card, CardActions, CardContent, Divider, FormControl, Grid, InputAdornment, InputLabel, MenuItem, Select, Stack, TextField, Typography } from "@mui/material"
+import { GridRenderEditCellParams, type GridColDef } from "@mui/x-data-grid"
 import type React from "react"
 import { IconCircuitCapacitor, IconCircuitDiode, IconCircuitResistor } from '@tabler/icons-react'
 import CustomTable, { AddCardProps } from "../CustomTable"
 import { Link } from "react-router"
-import { RichTreeView } from '@mui/x-tree-view'
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Location, Supplier } from "../../types"
 import JsonEditComponent from "../JsonEditComponent"
 import JsonViewComponent from "../JsonViewComponent"
+import { ErrorOutline, Inventory, Store } from "@mui/icons-material"
+import { useForm, Controller } from 'react-hook-form'
+import { ErrorMessage } from '@hookform/error-message'
 
 const columns: GridColDef[] = [
     {
         "field": "part_num", headerName: "Part #", editable: true, renderCell: (params) => {
             let icon: React.ReactNode = null;
 
-            switch (params.row.component_type.toLowerCase()) {
+            switch (params.row.component_type?.toLowerCase()) {
                 case "diode":
                     icon = (<IconCircuitDiode size="18" color="white" />)
                     break;
@@ -68,36 +70,13 @@ const columns: GridColDef[] = [
 const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => {
     const [storageOptions, setStorageOptions] = useState<Location[]>([])
     const [supplierOptions, setSupplierOptions] = useState<Supplier[]>([])
+    const [componentType, setComponentType] = useState<string>("");
 
-    const [componentType, setComponentType] = useState<string>("")
-    const [partNum, setPartNum] = useState<string>("")
-    const [price, setPrice] = useState<string>("")
-    const [name, setName] = useState<string>("")
-    const [pkg, setPkg] = useState<string>("")
-    const [tolerance, setTolerance] = useState<string>("")
-    const [quantity, setQuantity] = useState<string>("")
-    const [voltageRating, setVoltageRating] = useState<string>("")
-    const [additional, setAdditional] = useState<string>("{}")
-    const [storage, setStorage] = useState<Location>()
-    const [supplier, setSupplier] = useState<Supplier>()
-
-    // resistor
-    const [resistance, setResistance] = useState<number>()
-    const [power, setPower] = useState<string>()
-    const [composition, setComposition] = useState<string>()
-
-    // capacitor
-    const [capacitance, setCapacitance] = useState<number>()
-    const [capType, setCapType] = useState<string>()
-    const [tempCoeff, setTempCoeff] = useState<string>()
-
-    // diode
-    const [vforward, setVForward] = useState<number>()
-    const [vreverse, setVReverse] = useState<number>()
-    const [dCapacitance, setDCapacitance] = useState<number>()
+    // TODO: error handling
+    const { handleSubmit, control, register, formState: { errors } } = useForm()
 
     useEffect(() => {
-        fetch('http://localhost:3000/location/all')
+        fetch('http://localhost:3000/location')
             .then(res => res.json())
             .then(json => {
                 setStorageOptions(json)
@@ -105,45 +84,53 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
     }, [])
 
     useEffect(() => {
-        fetch('http://localhost:3000/supplier/all')
+        fetch('http://localhost:3000/shipping/supplier')
             .then(res => res.json())
             .then(json => {
                 setSupplierOptions(json)
             })
     }, [storageOptions])
 
-    let additionalOpts
+    const onSubmit = (data) => {
+        console.log('submitting', data)
 
-    switch (componentType) {
-        case "resistor":
-            additionalOpts = { resistance, power, composition }
-            break
-        case "capacitor":
-            additionalOpts = { capacitance, type: capType, temp_coeff: tempCoeff }
-            break
-        case "diode":
-            additionalOpts = { vforward, vreverse, capacitance: dCapacitance }
-            break
-    }
+        const {
+            part_num: partNum,
+            price,
+            name,
+            package: pkg,
+            tolerance,
+            quantity,
+            voltage_rating: voltageRating,
+            additional,
+            storage,
+            supplier,
+            resistance, power, composition,
+            capacitance, type: capType, temp_coeff,
+            vforward, vreverse, dcapacitance
+        } = data;
 
-    const newRow = useMemo(() => ({
-        part_num: partNum,
-        price,
-        name,
-        package: pkg,
-        tolerance,
-        quantity,
-        voltage_rating: voltageRating,
-        additional: JSON.parse(additional), // TODO: error checking
-        storage_name: storage?.storage_name,
-        facility: storage?.facility,
-        position: storage?.position,
-        supplier_name: supplier?.name,
-        component_type: componentType,
-        ...additionalOpts
-    }), [partNum, price, name, pkg, tolerance, quantity, voltageRating, additional, storage, supplier, additionalOpts])
+        let { storage_name, facility, position } = storage ? JSON.parse(storage) : {};
+        let supplier_name = JSON.parse(supplier).name
 
-    const handleCreate = () => {
+        const newRow = {
+            part_num: partNum,
+            price,
+            name,
+            package: pkg,
+            tolerance,
+            quantity,
+            voltage_rating: voltageRating,
+            additional: JSON.parse(additional), // TODO: error checking
+            storage_name,
+            facility,
+            position,
+            supplier_name,
+            componentType,
+            resistance, power, composition,
+            capacitance, type: capType, temp_coeff,
+            vforward, vreverse, dcapacitance
+        }
         fetch(`http://localhost:3000/component/${componentType}`, {
             method: 'POST',
             body: JSON.stringify(newRow)
@@ -155,91 +142,140 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
         })
     }
 
+    const generateErrorMessage = (name: string) => {
+        return (
+            <ErrorMessage
+                errors={errors}
+                name={name}
+                render={(err) => {
+                    return (
+                        <Grid size={4}>
+                            <Stack direction="row" alignItems="center" gap={0.25} sx={{ m: "0.125rem" }}>
+                                <ErrorOutline fontSize="small" color="error" />
+                                <Typography color="error">
+                                    {err.message}
+                                </Typography>
+                            </Stack>
+                        </Grid>
+                    )
+                }}
+            />
+        )
+    }
+
     return (
         <Card variant="outlined" sx={{ bgcolor: 'background.paper', width: '50%', minWidth: '600px', maxWidth: '1000px' }}>
-            <CardContent>
-                <Typography variant="h3">{label}</Typography>
-                <Stack direction="column" gap={2} sx={{ pt: 1 }}>
-                    <Stack direction="row" gap={1}>
-                        <TextField required sx={{ width: '100%' }} label="Part #" key="part_num" variant="outlined" value={partNum} onChange={(event) => setPartNum(event.target.value)} />
-                        <TextField required sx={{ width: '100%' }} label="Name" key="name" variant="outlined" value={name} onChange={(event) => setName(event.target.value)} />
-                    </Stack>
-                    <FormControl fullWidth>
-                        <InputLabel id="component-type-label">Component Type</InputLabel>
-                        <Select label="Component Type" labelId="component-type-label" value={componentType} onChange={(event) => setComponentType(event.target.value)}>
-                            <MenuItem value="resistor">Resistor</MenuItem>
-                            <MenuItem value="capacitor">Capacitor</MenuItem>
-                            <MenuItem value="diode">Diode</MenuItem>
-                            <MenuItem value="other">Other</MenuItem>
-                        </Select>
-                    </FormControl>
-                    <Stack direction="row" gap={1}>
-                        <TextField required sx={{ width: '100%' }} type="number" label="Price" key="price" variant="outlined" value={price} onChange={(event) => setPrice(event.target.value)} />
-                        <TextField required sx={{ width: '100%' }} type="number" label="Quantity" key="quantity" variant="outlined" value={quantity} onChange={event => setQuantity(event.target.value)} />
-                    </Stack>
-                    <Stack direction="row" gap={1} sx={{ width: '100%' }}>
-                        <TextField required sx={{ width: '100%' }} label="Package" key="package" variant="outlined" value={pkg} onChange={(event) => setPkg(event.target.value)} />
-                        <TextField required sx={{ width: '100%' }} label="Tolerance" key="tolerance" variant="outlined" value={tolerance} onChange={event => setTolerance(event.target.value)} />
-                        <TextField required sx={{ width: '100%' }} label="Voltage Rating" key="voltage_rating" variant="outlined" value={voltageRating} onChange={event => setVoltageRating(event.target.value)} />
-                    </Stack>
-                    <Stack direction="row" gap={1}>
+            <form onSubmit={handleSubmit(onSubmit)}>
+                <CardContent>
+                    <Typography variant="h3">{label}</Typography>
+                    <Stack direction="column" gap={2} sx={{ pt: 1 }}>
+                        <Stack direction="row" gap={1}>
+                            <TextField {...register('part_num', { required: 'Part Number is required' })} sx={{ width: '100%' }} label="Part #" variant="outlined" />
+                            <TextField {...register('name', { required: 'Name is required' })} sx={{ width: '100%' }} label="Name" variant="outlined" />
+                        </Stack>
                         <FormControl fullWidth>
-                            <InputLabel id="storage-select-label">Storage</InputLabel>
-                            <Select label="Storage" labelId="storage-select-label" value={storage} onChange={event => setStorage(event.target.value as Location)}>
-                                {storageOptions.map(opt => {
-                                    const id = `${opt.facility}-${opt.storage_name}-${opt.position}`
-                                    return (
-                                        <MenuItem key={id} value={opt}>{opt.label ?? id}</MenuItem>
-                                    )
-                                })}
-                            </Select>
+                            <InputLabel id="component-type-label">Component Type</InputLabel>
+                            <Controller name="component_type" control={control} rules={{ required: 'Component Type is required' }} render={(props) => (
+                                <Select {...props.field} label="Component Type" labelId="component-type-label" defaultValue="" onChange={(event) => {
+                                    props.field.onChange(event.target.value);
+                                    setComponentType(event.target.value);
+                                }}>
+                                    <MenuItem value="resistor">Resistor</MenuItem>
+                                    <MenuItem value="capacitor">Capacitor</MenuItem>
+                                    <MenuItem value="diode">Diode</MenuItem>
+                                    <MenuItem value="other">Other</MenuItem>
+                                </Select>
+                            )} />
                         </FormControl>
-                        <FormControl fullWidth>
-                            <InputLabel id="supplier-select-label">Supplier</InputLabel>
-                            <Select label="Supplier" labelId="supplier-select-label" value={supplier} onChange={event => setSupplier(event.target.value)}>
-                                {supplierOptions.map(opt => {
-                                    return (
-                                        <MenuItem key={opt.name} value={opt}>{opt.name}</MenuItem>
-                                    )
-                                })}
-                            </Select>
-                        </FormControl>
+                        <Stack direction="row" gap={1}>
+                            <TextField {...register('price', { required: 'Price is required' })} sx={{ width: '100%' }} type="number" label="Price" variant="outlined" slotProps={{
+                                input: {
+                                    startAdornment: <InputAdornment position="start">$</InputAdornment>
+                                }
+                            }} />
+                            <TextField {...register('quantity', { required: 'Quantity is required' })} sx={{ width: '100%' }} type="number" label="Quantity" variant="outlined" />
+                        </Stack>
+                        <Stack direction="row" gap={1} sx={{ width: '100%' }}>
+                            <TextField {...register('package', { required: 'Package is required' })} sx={{ width: '100%' }} label="Package" variant="outlined" />
+                            <TextField {...register('tolerance', { required: 'Tolerance is required', pattern: { value: /^0(\.[0-9]*)?$/, message: "Tolerance must be between 0 and 1" } })} sx={{ width: '100%' }} label="Tolerance" variant="outlined" type="number" />
+                            <TextField {...register('voltage_rating', { required: 'Voltage Rating is required' })} sx={{ width: '100%' }} label="Voltage Rating" variant="outlined" slotProps={{
+                                input: {
+                                    endAdornment: <InputAdornment position="end">V</InputAdornment>
+                                }
+                            }} />
+                        </Stack>
+                        <Stack direction="row" gap={1}>
+                            <FormControl fullWidth>
+                                <InputLabel id="storage-select-label">Storage</InputLabel>
+                                <Controller name="storage" control={control} rules={{ required: false }} render={({ field }) => (
+                                    <Select {...field} label="Storage" labelId="storage-select-label" defaultValue="" startAdornment={<Inventory sx={{ color: "divider" }} fontSize="small" />}>
+                                        {storageOptions.map(opt => {
+                                            const id = `${opt.facility}-${opt.storage_name}-${opt.position}`
+                                            return (
+                                                <MenuItem key={id} value={JSON.stringify(opt)}>{opt.label ?? id}</MenuItem>
+                                            )
+                                        })}
+                                    </Select>
+                                )} />
+                            </FormControl>
+                            <FormControl fullWidth>
+                                <InputLabel id="supplier-select-label">Supplier</InputLabel>
+                                <Controller name="supplier" control={control} rules={{ required: 'Supplier is required' }} render={({ field }) => (
+                                    <Select {...field} label="Supplier" labelId="supplier-select-label" startAdornment={<Store sx={{ color: "divider" }} fontSize="small" />}>
+                                        {supplierOptions.map(opt => {
+                                            return (
+                                                <MenuItem key={opt.name} value={JSON.stringify(opt)}>{opt.name}</MenuItem>
+                                            )
+                                        })}
+                                    </Select>
+                                )} />
+                            </FormControl>
+                        </Stack>
+                        <TextField {...register('additional', { required: 'Additional Data is required' })} label="Additional Data" variant="outlined" multiline rows={4} />
+                        {(componentType === "resistor" || componentType === "capacitor" || componentType === "diode") && (
+                            <>
+                                <Divider />
+                                <Typography variant="h5">{componentType[0].toUpperCase()}{componentType.substring(1).toLowerCase()} Properties</Typography>
+                            </>
+                        )}
+                        {componentType === "resistor" && (
+                            <Stack direction="row" gap={1}>
+                                <TextField {...register('resistance', { required: 'Resistance is required' })} type="number" sx={{ width: '100%' }} label="Resistance" />
+                                <TextField {...register('power', { required: 'Power is required' })} sx={{ width: '100%' }} label="Power" />
+                                <TextField {...register('composition', { required: 'Composition is required' })} sx={{ width: '100%' }} label="Composition" />
+                            </Stack>
+                        )}
+                        {componentType === "capacitor" && (
+                            <Stack direction="row" gap={1}>
+                                <TextField {...register('capacitance', { required: 'Capacitance is required' })} type="number" sx={{ width: '100%' }} label="Capacitance" />
+                                <TextField {...register('capacitor_type', { required: 'Capacitor Type is required' })} sx={{ width: '100%' }} label="Capacitor Type" />
+                                <TextField {...register('temp_coeff', { required: 'Temperature Coefficient is required' })} sx={{ width: '100%' }} label="Temperature Coefficient" />
+                            </Stack>
+                        )}
+                        {componentType === "diode" && (
+                            <Stack direction="row" gap={1}>
+                                <TextField {...register('vforward', { required: 'Forward Voltage is required' })} type="number" sx={{ width: '100%' }} label="Forward Voltage" />
+                                <TextField {...register('vreverse', { required: 'Reverse Voltage is required' })} type="number" sx={{ width: '100%' }} label="Reverse Voltage" />
+                                <TextField {...register('dcapacitance', { required: 'Diode Capacitance is required' })} sx={{ width: '100%' }} label="Diode Capacitance" />
+                            </Stack>
+                        )}
                     </Stack>
-                    <TextField required label="Additional Data" key="additional" variant="outlined" value={additional} onChange={event => setAdditional(event.target.value)} multiline rows={4} />
-                    {(componentType === "resistor" || componentType === "capacitor" || componentType === "diode") && (
-                        <>
-                            <Divider />
-                            <Typography variant="h5">{componentType[0].toUpperCase()}{componentType.substring(1).toLowerCase()} Properties</Typography>
-                        </>
-                    )}
-                    {componentType === "resistor" && (
-                        <Stack direction="row" gap={1}>
-                            <TextField required type="number" sx={{ width: '100%' }} label="Resistance" value={resistance} onChange={event => setResistance(event.target.value)} />
-                            <TextField required sx={{ width: '100%' }} label="Power" value={power} onChange={event => setPower(event.target.value)} />
-                            <TextField required sx={{ width: '100%' }} label="Composition" value={composition} onChange={event => setComposition(event.target.value)} />
-                        </Stack>
-                    )}
-                    {componentType === "capacitor" && (
-                        <Stack direction="row" gap={1}>
-                            <TextField required type="number" sx={{ width: '100%' }} label="Capacitance" value={capacitance} onChange={event => setCapacitance(event.target.value)} />
-                            <TextField required sx={{ width: '100%' }} label="Capacitor Type" value={capType} onChange={event => setCapType(event.target.value)} />
-                            <TextField required sx={{ width: '100%' }} label="Temperature Coefficient" value={tempCoeff} onChange={event => setTempCoeff(event.target.value)} />
-                        </Stack>
-                    )}
-                    {componentType === "diode" && (
-                        <Stack direction="row" gap={1}>
-                            <TextField required type="number" sx={{ width: '100%' }} label="Forward Voltage" value={vforward} onChange={event => setVForward(event.target.value)} />
-                            <TextField required type="number" sx={{ width: '100%' }} label="Reverse Voltage" value={vreverse} onChange={event => setVReverse(event.target.value)} />
-                            <TextField required sx={{ width: '100%' }} label="Capacitance" value={capacitance} onChange={event => setDCapacitance(event.target.value)} />
-                        </Stack>
-                    )}
-                </Stack>
-            </CardContent>
-            <CardActions sx={{ pt: 2 }}>
-                <Button size="small" variant="outlined" onClick={() => setModalOpen(false)}>Cancel</Button>
-                <Button size="small" variant="outlined" onClick={handleCreate}>Create</Button>
-            </CardActions>
-        </Card>
+                    <Grid container sx={{ mt: 1 }}>
+                        {columns.map(c => generateErrorMessage(c.field))}
+                        {generateErrorMessage("component_type")}
+                        {generateErrorMessage("storage")}
+                        {generateErrorMessage("supplier")}
+                        {componentType === "resistor" && ['resistance', 'power', 'composition'].map(generateErrorMessage)}
+                        {componentType === "capacitor" && ['capacitance', 'capacitor_type', 'temp_coeff'].map(generateErrorMessage)}
+                        {componentType === "diode" && ['vforward', 'vreverse', 'dcapacitance'].map(generateErrorMessage)}
+                    </Grid>
+                </CardContent>
+                <CardActions sx={{ pt: 2 }}>
+                    <Button size="small" variant="outlined" onClick={() => setModalOpen(false)}>Cancel</Button>
+                    <Button size="small" variant="outlined" type="submit">Create</Button>
+                </CardActions>
+            </form>
+        </Card >
     )
 }
 

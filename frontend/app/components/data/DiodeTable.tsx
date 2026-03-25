@@ -29,7 +29,6 @@ const DiodeTable: React.FC = () => {
     }, [])
 
     const mutateRow = useCallback(async (row, oldRow) => {
-        console.log(row, oldRow)
         await fetch(`http://localhost:3000/component/${oldRow.part_num}`, { method: "PUT", body: JSON.stringify(row) });
         return row
     }, [])
