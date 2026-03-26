@@ -9,6 +9,8 @@ import { useForm, Controller } from "react-hook-form"
 import { ErrorOutline, Store, LocalShipping } from "@mui/icons-material"
 import { rowSelectionStateInitializer } from "@mui/x-data-grid/internals"
 import { Supplier, Courier } from "../../types"
+import { DateField, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 
 const locHost = `http://localhost:3000`
 const emptyPurchase = {
@@ -65,6 +67,7 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
         }
         fetch(`${locHost}/shipping/purchase`, {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newRow)
         }).then(res => {
             if (Math.floor(res.status / 100) === 2) {
@@ -86,10 +89,21 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
                                 slotProps={{ input: { startAdornment: <InputAdornment position="start">$</InputAdornment> } }} />
                         </Stack>
                         <Stack direction="row" gap={1}>
-                            <TextField {...register('date_placed', { required: 'Date placed is required' })} sx={{ width: '100%' }} label="Date Placed" variant="outlined" 
-                                slotProps={ { inputLabel: { shrink: true } } } />
-                            <TextField {...register('delivery_date')} sx={{ width: '100%' }} label="Delivery Date" variant="outlined" 
-                                slotProps={ { inputLabel: { shrink: true } } } />                       
+                            <TextField 
+                                {...register('date_placed', { required: 'Date placed is required' })} 
+                                sx={{ width: '100%' }} 
+                                label="Date Placed" 
+                                type="date"
+                                variant="outlined" 
+                                slotProps={ { inputLabel: { shrink: true } } }
+                            />
+                            <TextField 
+                                {...register('delivery_date')} 
+                                sx={{ width: '100%' }} label="Delivery Date"
+                                type="date" 
+                                variant="outlined" 
+                                slotProps={ { inputLabel: { shrink: true } } } 
+                            />                       
                         </Stack>
                         <TextField { ...register('tracking_code')} sx={{ width: '100%' }} label="Tracking Code" variant="outlined" />
                         <Stack direction="row" gap={1}>
@@ -134,13 +148,13 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
 
 const PurchasesTable: React.FC = () => {
     const getData = useCallback(async () => {
-        return await fetch(`${locHost}/shipping?type=purchases`)
+        return await fetch(`${locHost}/shipping/purchase`)
             .then(res => res.json())
             .then(json => json.map((j, i) => ({ id: i, ...j })))
     }, [])
     
     const mutateRow = useCallback(async (row, oldRow) => {
-        await fetch(`${locHost}/components${oldRow.order_num}`)
+        await fetch(`${locHost}/shipping/purchase/${oldRow.order_num}`)
         return row
     }, [])
 
