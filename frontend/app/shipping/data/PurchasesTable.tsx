@@ -1,5 +1,4 @@
 import { Button, Card, CardContent, CardActions, Grid, Select, Stack, Typography, TextField, InputAdornment, FormControl, InputLabel, MenuItem } from "@mui/material"
-// import { PanoramaSharp } from "@mui/icons-material"
 import { useCallback, useState, useEffect, } from "react"
 import { type GridColDef } from "@mui/x-data-grid"
 import { Link } from "react-router"
@@ -7,21 +6,14 @@ import CustomTable, { AddCardProps } from "../CustomTable"
 import { ErrorMessage } from "@hookform/error-message"
 import { useForm, Controller } from "react-hook-form"
 import { ErrorOutline, Store, LocalShipping } from "@mui/icons-material"
-// import { rowSelectionStateInitializer } from "@mui/x-data-grid/internals"
 import { Supplier, Courier } from "../../types"
-// import { DateField, LocalizationProvider } from '@mui/x-date-pickers';
-// import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 
-const locHost = `http://localhost:3000`
-const emptyPurchase = {
-    order_number: '', price: '', tracking_code: '', 
-    date_placed: '', delivery_date: '', supplier: '', courier: ''
-}
+const localHost = `http://localhost:3000`
 
 const columns: GridColDef[] = [
     { field: "order_number",  headerName: "Order #",       editable: true },
     { field: "price",         headerName: "Price",         editable: true,   type: "number" },
-    { field: "tracking_code", headerName: "Tracking Code", editable:true },
+    { field: "tracking_code", headerName: "Tracking Code", editable: true },
     { field: "date_placed",   headerName: "Date Placed",   editable: true },
     { field: "delivery_date", headerName: "Delivery Date", editable: true },   
     {  
@@ -44,8 +36,8 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
     const { handleSubmit, register, control, formState: { errors } } = useForm();
 
     useEffect(() => {
-        fetch(`${locHost}/shipping/supplier`).then(r => r.json()).then(setSupplierOptions)
-        fetch(`${locHost}/shipping/courier`).then(r => r.json()).then(setCourierOptions)
+        fetch(`${localHost}/shipping/supplier`).then(r => r.json()).then(setSupplierOptions)
+        fetch(`${localHost}/shipping/courier`).then(r => r.json()).then(setCourierOptions)
     }, [] )
 
     const generateErrorMessage = (name: string) => (
@@ -65,7 +57,7 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
             supplier: JSON.parse(data.supplier).name,
             courier: data.courier ? JSON.parse(data.courier).name : null,
         }
-        fetch(`${locHost}/shipping/purchase`, {
+        fetch(`${localHost}/shipping/purchase`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newRow)
@@ -148,13 +140,13 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
 
 const PurchasesTable: React.FC = () => {
     const getData = useCallback(async () => {
-        return await fetch(`${locHost}/shipping/purchase`)
+        return await fetch(`${localHost}/shipping/purchase`)
             .then(res => res.json())
             .then(json => json.map((j, i) => ({ id: i, ...j })))
     }, [])
     
     const mutateRow = useCallback(async (row, oldRow) => {
-        await fetch(`${locHost}/shipping/purchase/${oldRow.order_num}`)
+        await fetch(`${localHost}/shipping/purchase/${oldRow.order_num}`)
         return row
     }, [])
 
