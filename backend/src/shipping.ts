@@ -67,6 +67,7 @@ app.put('/purchase/:order_number', async c => {
             price = ${price},
             tracking_code = ${tracking_code ?? null},
             date_placed = ${date_placed},
+            delivery)date = ${date_placed ?? null},
             supplier = ${supplier ?? null},
             courier = ${courier}
         WHERE order_number = ${order_number}`
