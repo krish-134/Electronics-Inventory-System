@@ -1,7 +1,10 @@
 import type React from "react"
+import Locations from "../components/data/Locations"
 
-const Locations: React.FC = () => {
-    return <>locations</>
+const LocationsPage: React.FC = () => {
+    return <>
+        <Locations />
+    </>
 }
 
-export default Locations
+export default LocationsPage
