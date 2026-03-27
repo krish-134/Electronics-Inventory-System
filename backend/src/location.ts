@@ -9,8 +9,8 @@ app.get('/', async c => {
 })
 
 app.get('/components', async c => {
-    const res: Result = await sql`SELECT c.part_num, t.storage_name, t.facility, t.position FROM (
-        SELECT l.storage_name, l.facility, l.position, COUNT(*) FROM location l GROUP BY (l.storage_name, l.facility, l.position)
+    const res = await sql`SELECT c.part_num, t.storage_name, t.facility, t.position, t.label FROM (
+        SELECT l.storage_name, l.facility, l.position, l.label, COUNT(*) FROM location l GROUP BY (l.storage_name, l.facility, l.position)
     ) t JOIN component c ON c.storage_name = t.storage_name AND c.facility = t.facility AND c.position = t.position`
 
     type ComponentWithLocation = ItemLocation & Pick<Component, "part_num">
@@ -19,18 +19,24 @@ app.get('/components', async c => {
 
     const byFacility: {
         [facility: string]: {
-            [storage_name: string]: ItemLocation[]
+            [storage_name: string]: {
+                [position: string]: ItemLocation[]
+            }
         }
     } = {};
 
     locations.forEach(loc => {
-        const facilityMap: { [storage_name: string]: ItemLocation[] } = {};
+        const facilityMap: { [storage_name: string]: { [position: string]: ItemLocation[] } } = {};
         locations.forEach(loc2 => {
             if (loc.facility != loc2.facility) return;
             const key = loc2.label ?? loc2.storage_name;
+            console.log(key, loc2)
 
-            if (!facilityMap[key]) facilityMap[key] = []
-            facilityMap[key]?.push(loc2)
+            if (!facilityMap[key]) facilityMap[key] = {}
+
+            if (!facilityMap[key][loc2.position]) facilityMap[key][loc2.position] = [];
+
+            facilityMap[key]?.[loc2.position]?.push(loc2)
         })
         byFacility[loc.facility] = facilityMap
     })
