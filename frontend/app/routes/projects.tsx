@@ -28,7 +28,7 @@ const Projects: React.FC = () => {
                 {returned.length > 0 ?
                     <DisplayTable label={"Projects"} data={returned}/>
                     :
-                    <p className="text-red-400">
+                     <p className="w-2/3 justify-self-center text-red-400">
                         {errorText}
                     </p>
                 }
