@@ -1,14 +1,20 @@
 import type React from "react"
-import { Box, Button, Grid, Icon, Stack, Typography } from "@mui/material"
-import { Location } from '../../types'
-import { PropsWithChildren, useEffect, useMemo, useState } from "react"
-import { Add, DragHandle, DragIndicator } from "@mui/icons-material"
+import { Box, Button, Grid, Icon, IconButton, Stack, Typography } from "@mui/material"
+import { Component, Location } from '../../types'
+import { PropsWithChildren, useCallback, useEffect, useMemo, useState } from "react"
+import { Add, DragHandle, DragIndicator, MoreVert, VerticalShadesTwoTone } from "@mui/icons-material"
 import { DndProvider, useDrag, useDrop } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 
-const ComponentItem: React.FC<PropsWithChildren<{}>> = ({ children }) => {
+type ItemProps = {
+    id: string
+    from: Location
+}
+
+const ComponentItem: React.FC<PropsWithChildren<{ part_num: string, location: Location }>> = ({ part_num, location, children }) => {
     const [{ isDragging }, drag, dragPreview] = useDrag(() => ({
         type: 'COMPONENT',
+        item: { id: part_num, from: location } as ItemProps,
         collect: (monitor) => ({
             isDragging: monitor.isDragging()
         })
@@ -24,9 +30,15 @@ const ComponentItem: React.FC<PropsWithChildren<{}>> = ({ children }) => {
     )
 }
 
-const ComponentList: React.FC<PropsWithChildren<Location>> = ({ children, ...location }) => {
+const ComponentList: React.FC<PropsWithChildren<Location & { handleDrop: (part_num: string, l: Location) => void }>> = ({ children, handleDrop, ...location }) => {
     const [{ canDrop, isOver }, drop] = useDrop(() => ({
         accept: 'COMPONENT',
+        drop: (item: ItemProps, monitor) => {
+            console.log('dropping', item, monitor)
+            const loc = item.from;
+            if (loc.facility === location.facility && loc.storage_name === location.storage_name && loc.position === location.position) return;
+            handleDrop(item?.id, location)
+        },
         collect: (monitor) => ({
             isOver: monitor.isOver(),
             canDrop: monitor.canDrop()
@@ -60,48 +72,72 @@ const Locations: React.FC = () => {
         fetchData()
     }, [])
 
-    const byFacility: Map<string, Map<string, Location[]>> = useMemo(() => {
-        const ret = new Map()
+    const byFacility: {
+        [facility: string]: {
+            [storage_name: string]: {
+                [position: string]: Location[]
+            }
+        }
+    } = useMemo(() => {
+        const ret = {}
         locations.forEach(loc => {
-            const facilityMap: Map<string, Location[]> = new Map();
+            const facilityMap: { [storage_name: string]: { [position: string]: Location[] } } = {};
             locations.forEach(loc2 => {
                 if (loc.facility != loc2.facility) return;
                 const key = loc2.label ?? loc2.storage_name;
 
-                if (!facilityMap.has(key)) facilityMap.set(key, [])
-                facilityMap.get(key)?.push(loc2)
+                if (!facilityMap[key]) facilityMap[key] = {}
+
+                if (!facilityMap[key][loc2.position]) facilityMap[key][loc2.position] = [];
+
+                facilityMap[key]?.[loc2.position]?.push(loc2)
             })
-            ret.set(loc.facility, facilityMap)
+            ret[loc.facility] = facilityMap
         })
-        return ret;
+        return ret
     }, [locations])
+
+    const handleDrop = useCallback(async (part_num: string, location: Location) => {
+        await fetch(`http://localhost:3000/component/${part_num}/move`, {
+            method: "PUT",
+            body: JSON.stringify(location)
+        })
+    }, [])
 
     return (
         <DndProvider backend={HTML5Backend}>
             <Grid container spacing={2} sx={{ width: "100%" }}>
-                {[...byFacility.entries()].map(([facility, locs]) => (
+                {[...Object.entries(byFacility)].map(([facility, locs]) => (
                     <Grid key={facility} sx={{ border: "1px solid", borderColor: "divider", p: 4, borderRadius: 2, width: "100%" }}>
                         <Typography variant="h6">{facility}</Typography>
                         <Stack direction="column" gap={2} sx={{ mt: 2 }}>
-                            {[...locs.entries()].map(([display_name, locs]) => (
+                            {[...Object.entries(locs)].map(([display_name, locs]) => (
                                 <Box key={display_name} sx={{ border: "1px solid", borderColor: "background.paper", p: 4, borderRadius: 2, width: "100%" }}>
                                     <Typography variant="subtitle1">{display_name}</Typography>
-                                    <Grid container size={3} sx={{ width: "100%", mt: 1 }}>
-                                        {locs.map(loc => (
-                                            <Grid key={loc.position} sx={{ bgcolor: "background.paper", p: 2, borderRadius: 2 }} size={3}>
-                                                <ComponentList {...loc}>
-                                                    {componentLocations[facility]?.[loc.storage_name]?.map(c => (
-                                                        <ComponentItem>
-                                                            <Typography variant="caption">
-                                                                {c.part_num}
-                                                            </Typography>
-                                                        </ComponentItem>
-                                                    )) ?? (
-                                                            <Typography variant="caption">No components...</Typography>
-                                                        )}
-                                                </ComponentList>
-                                            </Grid>
-                                        ))}
+                                    <Grid container size={3} spacing={1} sx={{ width: "100%", mt: 1 }}>
+                                        {Object.entries(locs).map(([position, locs]) => {
+                                            const components = componentLocations[facility]?.[display_name]?.[position];
+                                            return locs.map(loc => (
+                                                <Grid key={loc.position} sx={{ bgcolor: "background.paper", p: 2, borderRadius: 2 }} size={3}>
+                                                    {(!components || !components.length) && (
+                                                        <IconButton sx={{ position: "relative", float: "right", top: -10, right: -10, borderRadius: 2 }}>
+                                                            <MoreVert fontSize="small" />
+                                                        </IconButton>
+                                                    )}
+                                                    <ComponentList handleDrop={handleDrop} {...loc}>
+                                                        {components?.map(c => (
+                                                            <ComponentItem part_num={c.part_num} location={loc}>
+                                                                <Typography variant="caption">
+                                                                    {c.part_num}
+                                                                </Typography>
+                                                            </ComponentItem>
+                                                        )) ?? (
+                                                                <Typography variant="caption">No components...</Typography>
+                                                            )}
+                                                    </ComponentList>
+                                                </Grid>
+                                            ))
+                                        })}
                                     </Grid>
                                 </Box>
                             ))}

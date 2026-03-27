@@ -11,7 +11,7 @@ CREATE TABLE Location (
     facility     VARCHAR,
     type         VARCHAR,
     label        VARCHAR,
-    last_updated TIMESTAMP,
+    last_updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     PRIMARY KEY (storage_name, position, facility)
 );
@@ -25,9 +25,9 @@ CREATE TABLE Supplier (
 
 CREATE TABLE Project (
     name         VARCHAR PRIMARY KEY,
-    created_at   TIMESTAMP NOT NULL,
+    created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     purpose      TEXT,
-    last_updated TIMESTAMP,
+    last_updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     storage_name VARCHAR,
     position     VARCHAR,
@@ -117,7 +117,7 @@ CREATE TABLE Courier (
 CREATE TABLE Version (
     version_number VARCHAR,
     title          VARCHAR NOT NULL,
-    date           TIMESTAMP NOT NULL,
+    date           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     snapshot       JSONB NOT NULL,
     created_by     VARCHAR,
     project_name   VARCHAR,
@@ -215,6 +215,7 @@ INSERT INTO Users (username, password, email, real_name) VALUES
 -- Location --
 INSERT INTO Location (storage_name, position, facility, type, label, last_updated) VALUES 
 ('resistors', 'row1_col1', 'workshop', 'bin', 'Resistors', '2026-03-06 10:00:00'),
+('resistors', 'row2_col1', 'workshop', 'bin', 'Resistors', '2026-03-06 10:00:00'),
 ('capacitors', 'row1_col2', 'workshop', 'bin', 'Capacitors', '2026-03-06 10:00:00'),
 ('projects', 'cabinet1_shelf3', 'storage_room', 'shelf', 'Projects Storage', '2026-03-06 10:00:00'),
 ('large', 'drawer1', 'home', 'drawer', 'Larger Items', '2026-03-06 10:00:00'),
