@@ -1,13 +1,14 @@
 import type React from "react"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { Theme, useTheme } from '@mui/material/styles';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
-import Select, { SelectChangeEvent, selectClasses } from '@mui/material/Select';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
 import Button from "@mui/material/Button";
-import { Box, Chip, Divider, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from "@mui/material";
+import { Box, Chip, Divider, TextField } from "@mui/material";
+import DisplayTable from "../components/DisplayTable";
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -54,7 +55,7 @@ const attributes = [
     'voltage_rating'
 ]
 
-function formatString(str : string) {
+export function formatString(str : string) {
     str = str.replace("_", " ");
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
@@ -77,13 +78,11 @@ const Locations: React.FC = () => {
     const [errorText, setErrorText] = useState<string>();
 
     const [returned, setReturned] = useState<object[]>([]);
-    const [tableKeys, setTableKeys] = useState<string[]>([]);
 
     useEffect(() => {
         if (!returned.length) {
             return;
         };
-        setTableKeys(Object.keys(returned[0]));
     }, [returned]);
 
     function request() {
@@ -203,24 +202,7 @@ const Locations: React.FC = () => {
             </div>
             <div className="w-3/4">
                 {returned.length > 0 ?
-                    <TableContainer component={Paper}>
-                        <Table aria-label="simple table">
-                            <TableHead>
-                                <TableRow>
-                                    {tableKeys.map(tk => <TableCell>{formatString(tk)}</TableCell>)}
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {returned.map((tup) => (
-                                    <TableRow
-                                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                                    >   
-                                        {Object.values(tup).map(val => <TableCell>{val}</TableCell>)}
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
+                    <DisplayTable label={"Locations"} data={returned}/>
                     :
                     <p className="w-2/3 justify-self-center text-red-400">
                         {errorText}
