@@ -110,7 +110,7 @@ const Locations: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col my-3 space-y-6 pt-9 w-4/5">
+        <div className="flex flex-col my-3 space-y-6 pt-9 w-full">
             <p>
                 Use this page to find the locations of your components, as well as extra details about it and its placement.
             </p>

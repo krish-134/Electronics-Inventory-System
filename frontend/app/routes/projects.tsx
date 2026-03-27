@@ -16,7 +16,7 @@ const Projects: React.FC = () => {
     }
 
     return (
-        <div className="flex flex-col my-3 space-y-6 pt-9 w-4/5">   
+        <div className="flex flex-col my-3 space-y-6 pt-9 w-full">   
             <p>
                 Click this button to see the projects that use all of your components!
             </p>
