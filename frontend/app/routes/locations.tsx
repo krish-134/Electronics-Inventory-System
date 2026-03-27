@@ -110,106 +110,103 @@ const Locations: React.FC = () => {
     };
 
     return (
-        <>
-            <div className="flex flex-col my-3 space-y-6 w-1/2 pt-9">
-                <p>
-                    Use this page to find the locations of your components, as well as extra details about it and its placement.
-                </p>
+        <div className="flex flex-col my-3 space-y-6 pt-9 w-4/5">
+            <p>
+                Use this page to find the locations of your components, as well as extra details about it and its placement.
+            </p>
 
-                <Divider sx={{ mb: 3 }}/>
+            <Divider sx={{ mb: 3 }}/>
 
-                <p>
-                    Find the location of my components where
-                </p>
-                
-                <div>
-                    <FormControl>
-                        <InputLabel id="demo-simple-select-label">Attribute</InputLabel>
-                        <Select
-                            labelId="demo-simple-select-label"
-                            id="demo-simple-select"
-                            value={selectedAttribute}
-                            label="Attribute"
-                            onChange={e => setSelectedAttribute(e.target.value)}
-                            sx={{ width: 200, mr: 2 }}
-                        >
-                            {attributes.map(atr => <MenuItem value={atr}>{formatString(atr)}</MenuItem>)}
-                        </Select>
-                    </FormControl>
-                    
-                    <FormControl >
-                        <InputLabel id="demo-simple-select-label">Operator</InputLabel>
-                        <Select
-                            labelId="demo-simple-select-label"
-                            id="demo-simple-select"
-                            value={selectedOperator}
-                            label="Operator"
-                            onChange={e => setSelectedOperator(e.target.value)}
-                            sx={{ width: 115, mr: 2 }}
-                        >
-                            {operators.map(op => <MenuItem value={op.value}>{op.display}</MenuItem>)}
-                        </Select>
-                    </FormControl>
-
-                    <FormControl> 
-                        <TextField 
-                            id="outlined-basic" 
-                            label="Value" 
-                            variant="outlined" 
-                            type="number" 
-                            onChange={e => setQueriedValue(e.target.value as any)} 
-                            value={queriedValue}
-                            sx={{ width: 200 }}
-                        />
-                    </FormControl>
-                </div>
-
-                <p className="-mt-1">
-                    and only show
-                </p>
-
-                <FormControl sx={{ mb: 3, width: 550 }}>
-                    <InputLabel id="demo-multiple-name-label">Columns</InputLabel>
+            <p>
+                Find the location of my components where
+            </p>
+            
+            <div>
+                <FormControl>
+                    <InputLabel id="demo-simple-select-label">Attribute</InputLabel>
                     <Select
-                        labelId="demo-multiple-name-label"
-                        id="demo-multiple-name"
-                        multiple
-                        value={selectedColumns}
-                        onChange={handleColumnSelect}
-                        input={<OutlinedInput label="Columns" />}
-                        renderValue={(selected) => (
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                            {selected.map((value) => (
-                                <Chip key={value} label={formatString(value)} />
-                            ))}
-                            </Box>
-                        )}
-                        MenuProps={MenuProps}
+                        labelId="demo-simple-select-label"
+                        id="demo-simple-select"
+                        value={selectedAttribute}
+                        label="Attribute"
+                        onChange={e => setSelectedAttribute(e.target.value)}
+                        sx={{ width: 200, mr: 2 }}
                     >
-                    {columns.map((name) => (
-                        <MenuItem
-                            key={name}
-                            value={name}
-                            style={getStyles(name, selectedColumns, theme)}
-                        >
-                        {formatString(name)}
-                        </MenuItem>
-                    ))}
+                        {attributes.map(atr => <MenuItem value={atr}>{formatString(atr)}</MenuItem>)}
                     </Select>
                 </FormControl>
                 
-                <Button onClick={request} sx={{ justifySelf: "left", width: 200, border: 1, mb: 1}}>Find my parts!</Button>
+                <FormControl >
+                    <InputLabel id="demo-simple-select-label">Operator</InputLabel>
+                    <Select
+                        labelId="demo-simple-select-label"
+                        id="demo-simple-select"
+                        value={selectedOperator}
+                        label="Operator"
+                        onChange={e => setSelectedOperator(e.target.value)}
+                        sx={{ width: 115, mr: 2 }}
+                    >
+                        {operators.map(op => <MenuItem value={op.value}>{op.display}</MenuItem>)}
+                    </Select>
+                </FormControl>
+
+                <FormControl> 
+                    <TextField 
+                        id="outlined-basic" 
+                        label="Value" 
+                        variant="outlined" 
+                        type="number" 
+                        onChange={e => setQueriedValue(e.target.value as any)} 
+                        value={queriedValue}
+                        sx={{ width: 200, mt: {xs: 2, sm: 0} }}
+                    />
+                </FormControl>
             </div>
-            <div className="w-3/4">
-                {returned.length > 0 ?
-                    <DisplayTable label={"Locations"} data={returned}/>
-                    :
-                    <p className="w-2/3 justify-self-center text-red-400">
-                        {errorText}
-                    </p>
-                }
-            </div>
-        </>
+
+            <p className="-mt-1">
+                and only show
+            </p>
+
+            <FormControl sx={{ mb: 3, width: {xs: 325, sm: 550}  }}>
+                <InputLabel id="demo-multiple-name-label">Columns</InputLabel>
+                <Select
+                    labelId="demo-multiple-name-label"
+                    id="demo-multiple-name"
+                    multiple
+                    value={selectedColumns}
+                    onChange={handleColumnSelect}
+                    input={<OutlinedInput label="Columns" />}
+                    renderValue={(selected) => (
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {selected.map((value) => (
+                            <Chip key={value} label={formatString(value)} />
+                        ))}
+                        </Box>
+                    )}
+                    MenuProps={MenuProps}
+                >
+                {columns.map((name) => (
+                    <MenuItem
+                        key={name}
+                        value={name}
+                        style={getStyles(name, selectedColumns, theme)}
+                    >
+                    {formatString(name)}
+                    </MenuItem>
+                ))}
+                </Select>
+            </FormControl>
+            
+            <Button onClick={request} sx={{ justifySelf: "left", width: 200, border: 1, mb: 1}}>Find my parts!</Button>
+
+            {returned.length > 0 ?
+                <DisplayTable label={"Locations"} data={returned}/>
+                :
+                <p className="text-red-400 pt-3">
+                    {errorText}
+                </p>
+            }
+        </div>
     )
 }
 
