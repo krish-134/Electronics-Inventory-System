@@ -11,10 +11,10 @@ import { rowSelectionStateInitializer } from "@mui/x-data-grid/internals";
 const localHost = `http://localhost:3000`
 
 const columns: GridColDef[] = [
-    { field: "name",          headerName: "Name",          editable: true },
-    { field: "code_format",   headerName: "Code Format",   editable: true },
-    { field: "website",       headerName: "Website",       editable: true },
-    { field: "contact_email", headerName: "Contact Email", editable: true}
+    { field: "name",          headerName: "Name",          editable: true,  flex: 1 },
+    { field: "code_format",   headerName: "Code Format",   editable: true,  flex: 1 },
+    { field: "website",       headerName: "Website",       editable: true,  flex: 2 },
+    { field: "contact_email", headerName: "Contact Email", editable: true,  flex: 2 }
 ]
 
 const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => {
@@ -92,7 +92,7 @@ const CouriersTable: React.FC = () => {
     }, [])          
 
     return (
-        <Stack direction="column">
+        <Stack direction="column" sx={{ width: '100%' }}>
             <Typography component="h2" variant="h6">
                 Couriers
             </Typography>

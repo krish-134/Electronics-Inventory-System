@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Card, CardContent, CardActions, Grid, Select, Stack, Typography, TextField, InputAdornment, FormControl, InputLabel, MenuItem } from "@mui/material"
+import { Button, Card, CardContent, CardActions, Grid, Stack, Typography, TextField } from "@mui/material"
 import { useCallback } from "react"
 import { type GridColDef } from "@mui/x-data-grid"
 import CustomTable, { AddCardProps } from "../CustomTable"
@@ -10,10 +10,10 @@ import { ErrorOutline } from "@mui/icons-material"
 const localHost = `http://localhost:3000`
 
 const columns: GridColDef[] = [
-    { field: "name",          headerName: "Name",          editable: true},
-    { field: "url",           headerName: "URL",           editable: true, flex: 1},
-    { field: "country",       headerName: "Country",       editable: true},
-    { field: "contact_email", headerName: "Contact Email", editable: true, flex: 1},
+    { field: "name",          headerName: "Name",          editable: true, flex: 1 },
+    { field: "url",           headerName: "URL",           editable: true, flex: 2 },
+    { field: "country",       headerName: "Country",       editable: true, flex: 1 },
+    { field: "contact_email", headerName: "Contact Email", editable: true, flex: 2 },
 ]
 
 const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => {
@@ -85,7 +85,7 @@ const SuppliersTable: React.FC = () => {
     }, [])
 
     return (
-        <Stack direction="column">
+        <Stack direction="column" sx={{ width: '100%' }}>
             <Typography component="h2" variant="h6">
                 Suppliers
             </Typography>
