@@ -31,7 +31,7 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
         )} />
     )
 
-    const onSubmit = (date) => {
+    const onSubmit = (data) => {
         fetch(`${localHost}/shipping/supplier`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
