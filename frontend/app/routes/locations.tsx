@@ -73,9 +73,10 @@ const Locations: React.FC = () => {
     const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
     const [selectedOperator, setSelectedOperator] = useState<string>("");
     const [selectedAttribute, setSelectedAttribute] = useState<string>("");
-    const [queriedValue, setQueriedValue] = useState<number>();
+    const [queriedValue, setQueriedValue] = useState<number>(0);
 
     const [errorText, setErrorText] = useState<string>();
+    const [invalidFields, setInvalidFields] = useState<boolean[]>([false, false, false]);
 
     const [returned, setReturned] = useState<object[]>([]);
 
@@ -88,8 +89,15 @@ const Locations: React.FC = () => {
     function request() {
         if (!selectedAttribute || !selectedOperator || selectedColumns.length <= 0) {
             setErrorText("Missing required fields!");
+            setInvalidFields([
+                !selectedAttribute,
+                !selectedOperator,
+                selectedColumns.length <= 0
+            ]);
             return;
         };
+
+        setInvalidFields([false, false, false]);
 
         const queryParams = `?fields=${selectedColumns.join(',')}&atr=${selectedAttribute}&op=${selectedOperator}&val=${queriedValue}`;
         fetch(`http://localhost:3000/location${queryParams}`)
@@ -131,6 +139,7 @@ const Locations: React.FC = () => {
                         label="Attribute"
                         onChange={e => setSelectedAttribute(e.target.value)}
                         sx={{ width: 200, mr: 2 }}
+                        error={invalidFields[0]}
                     >
                         {attributes.map(atr => <MenuItem value={atr}>{formatString(atr)}</MenuItem>)}
                     </Select>
@@ -145,6 +154,7 @@ const Locations: React.FC = () => {
                         label="Operator"
                         onChange={e => setSelectedOperator(e.target.value)}
                         sx={{ width: 115, mr: 2 }}
+                        error={invalidFields[1]}
                     >
                         {operators.map(op => <MenuItem value={op.value}>{op.display}</MenuItem>)}
                     </Select>
@@ -176,6 +186,7 @@ const Locations: React.FC = () => {
                     value={selectedColumns}
                     onChange={handleColumnSelect}
                     input={<OutlinedInput label="Columns" />}
+                    error={invalidFields[2]}
                     renderValue={(selected) => (
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                         {selected.map((value) => (
