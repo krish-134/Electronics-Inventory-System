@@ -164,12 +164,12 @@ app.put("/:part_num/move", async c => {
     const body = await c.req.json();
 
     const {
-        facility, storage_name, position
+        position
     } = body
 
-    if (!facility || !storage_name || !position) return c.status(200)
+    if (!position) return c.status(200)
 
-    const res = await sql`UPDATE component SET facility=${facility}, storage_name=${storage_name}, position=${position} WHERE part_num=${part_num};`
+    const res = await sql`UPDATE component SET position=${position} WHERE part_num=${part_num};`
 
     return c.json(res, 200)
 })

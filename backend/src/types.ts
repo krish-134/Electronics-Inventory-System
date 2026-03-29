@@ -40,7 +40,6 @@ export interface Location {
     position: string
     facility: string
     type?: string
-    label?: string
     last_updated?: string
 }
 

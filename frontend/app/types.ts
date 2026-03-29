@@ -35,12 +35,10 @@ export interface Diode {
 }
 
 export interface Location {
+    position_id: number
     storage_name: string
     position: string
     facility: string
-    type?: string
-    label?: string
-    last_updated?: string
 }
 
 export interface Courier {

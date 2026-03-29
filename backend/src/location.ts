@@ -5,43 +5,64 @@ import { Component, Location as ItemLocation } from "./types"
 const app = new Hono()
 
 app.get('/', async c => {
-    return c.json(await sql`SELECT * FROM location`)
+    const locations = await sql`
+        SELECT p.id AS position_id, p.name AS position, s.name AS storage_name, f.name AS facility FROM position p
+        JOIN storage s on p.storage = s.id
+        JOIN facility f ON s.facility = f.id
+    `;
+
+    return c.json(locations)
 })
 
 app.get('/components', async c => {
-    const res = await sql`SELECT c.part_num, t.storage_name, t.facility, t.position, t.label FROM (
-        SELECT l.storage_name, l.facility, l.position, l.label, COUNT(*) FROM location l GROUP BY (l.storage_name, l.facility, l.position)
-    ) t JOIN component c ON c.storage_name = t.storage_name AND c.facility = t.facility AND c.position = t.position`
+    const res = await sql`
+        SELECT c.part_num,
+            f.name AS facility_name,
+            s.name AS storage_name,
+            p.name AS position_name
+        FROM component c
+        JOIN position p ON c.position = p.id
+        JOIN storage s ON p.storage = s.id
+        JOIN facility f ON s.facility = f.id
+    `;
 
-    type ComponentWithLocation = ItemLocation & Pick<Component, "part_num">
+    const locations = res;
 
-    const locations = res as ComponentWithLocation[]
+    const byFacility = locations.reduce((acc, loc) => {
+        const { facility_name, storage_name, position_name, part_num } = loc;
 
-    const byFacility: {
-        [facility: string]: {
-            [storage_name: string]: {
-                [position: string]: ItemLocation[]
-            }
+        if (!acc[facility_name]) acc[facility_name] = {};
+        if (!acc[facility_name][storage_name]) acc[facility_name][storage_name] = {};
+        if (!acc[facility_name][storage_name][position_name]) {
+            acc[facility_name][storage_name][position_name] = []
         }
-    } = {};
 
-    locations.forEach(loc => {
-        const facilityMap: { [storage_name: string]: { [position: string]: ItemLocation[] } } = {};
-        locations.forEach(loc2 => {
-            if (loc.facility != loc2.facility) return;
-            const key = loc2.label ?? loc2.storage_name;
-            console.log(key, loc2)
-
-            if (!facilityMap[key]) facilityMap[key] = {}
-
-            if (!facilityMap[key][loc2.position]) facilityMap[key][loc2.position] = [];
-
-            facilityMap[key]?.[loc2.position]?.push(loc2)
+        acc[facility_name][storage_name][position_name].push({
+            part_num,
+            facility: facility_name,
+            storage_name,
+            position: position_name
         })
-        byFacility[loc.facility] = facilityMap
-    })
+
+        return acc
+    }, {})
 
     return c.json(byFacility)
 })
+
+// app.post('/create', async c => {
+//     const { location, type: loc_type } = await c.req.json();
+//     switch (loc_type) {
+//         case "facility":
+//             await sql`INSERT INTO location (facility) VALUES (${location.facility});`
+//             break;
+//         case "storage":
+//             await sql``
+//             break;
+//         case "position":
+//             await sql``
+//             break;
+//     }
+// })
 
 export default app
