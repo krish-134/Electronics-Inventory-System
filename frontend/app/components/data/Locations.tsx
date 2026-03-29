@@ -5,6 +5,7 @@ import { PropsWithChildren, useCallback, useEffect, useMemo, useState } from "re
 import { Add, DragHandle, DragIndicator, MoreVert, VerticalShadesTwoTone } from "@mui/icons-material"
 import { DndProvider, useDrag, useDrop } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
+import { produce } from 'immer';
 
 type ItemProps = {
     id: string
@@ -30,14 +31,14 @@ const ComponentItem: React.FC<PropsWithChildren<{ part_num: string, location: Lo
     )
 }
 
-const ComponentList: React.FC<PropsWithChildren<Location & { handleDrop: (part_num: string, l: Location) => void }>> = ({ children, handleDrop, ...location }) => {
+const ComponentList: React.FC<PropsWithChildren<Location & { handleDrop: (part_num: string, from: Location, to: Location) => void }>> = ({ children, handleDrop, ...location }) => {
     const [{ canDrop, isOver }, drop] = useDrop(() => ({
         accept: 'COMPONENT',
         drop: (item: ItemProps, monitor) => {
             console.log('dropping', item, monitor)
             const loc = item.from;
             if (loc.facility === location.facility && loc.storage_name === location.storage_name && loc.position === location.position) return;
-            handleDrop(item?.id, location)
+            handleDrop(item?.id, loc, location)
         },
         collect: (monitor) => ({
             isOver: monitor.isOver(),
@@ -58,6 +59,7 @@ const ComponentList: React.FC<PropsWithChildren<Location & { handleDrop: (part_n
 const Locations: React.FC = () => {
     const [locations, setLocations] = useState<Location[]>([])
     const [componentLocations, setComponentLocations] = useState<any>()
+    const [refresh, setRefresh] = useState<boolean>(false)
 
     useEffect(() => {
         const fetchData = async () => {
@@ -88,6 +90,7 @@ const Locations: React.FC = () => {
 
                 if (!facilityMap[key]) facilityMap[key] = {}
 
+
                 if (!facilityMap[key][loc2.position]) facilityMap[key][loc2.position] = [];
 
                 facilityMap[key]?.[loc2.position]?.push(loc2)
@@ -97,12 +100,30 @@ const Locations: React.FC = () => {
         return ret
     }, [locations])
 
-    const handleDrop = useCallback(async (part_num: string, location: Location) => {
+    const handleDrop = async (part_num: string, from: Location, to: Location) => {
         await fetch(`http://localhost:3000/component/${part_num}/move`, {
             method: "PUT",
-            body: JSON.stringify(location)
+            body: JSON.stringify(to)
         })
-    }, [])
+
+        setComponentLocations(produce(draft => {
+            const from_dname = from.label ?? from.storage_name
+            const to_dname = to.label ?? to.storage_name
+
+            const source = draft[from.facility][from_dname][from.position]
+            const idx = source.findIndex(c => c.part_num == part_num)
+
+            if (idx == -1) return;
+
+            const [component] = source.splice(idx, 1)
+
+            draft[to.facility] ??= {}
+            draft[to.facility][to_dname] ??= {}
+            draft[to.facility][to_dname][to.position] ??= []
+            draft[to.facility][to_dname][to.position].push({ ...component, ...to })
+        }))
+        setRefresh(!refresh)
+    }
 
     return (
         <DndProvider backend={HTML5Backend}>
@@ -125,15 +146,15 @@ const Locations: React.FC = () => {
                                                         </IconButton>
                                                     )}
                                                     <ComponentList handleDrop={handleDrop} {...loc}>
-                                                        {components?.map(c => (
+                                                        {(components && components.length) ? components.map(c => (
                                                             <ComponentItem part_num={c.part_num} location={loc}>
                                                                 <Typography variant="caption">
                                                                     {c.part_num}
                                                                 </Typography>
                                                             </ComponentItem>
-                                                        )) ?? (
-                                                                <Typography variant="caption">No components...</Typography>
-                                                            )}
+                                                        )) : (
+                                                            <Typography variant="caption">No components...</Typography>
+                                                        )}
                                                     </ComponentList>
                                                 </Grid>
                                             ))
