@@ -11,11 +11,11 @@ import { Supplier, Courier } from "../../types"
 const localHost = `http://localhost:3000`
 
 const columns: GridColDef[] = [
-    { field: "order_number",  headerName: "Order #",       editable: true },
-    { field: "price",         headerName: "Price",         editable: true,   type: "number" },
-    { field: "tracking_code", headerName: "Tracking Code", editable: true },
-    { field: "date_placed",   headerName: "Date Placed",   editable: true },
-    { field: "delivery_date", headerName: "Delivery Date", editable: true },   
+    { field: "order_number",  headerName: "Order #",       editable: true, flex: 0.5 },
+    { field: "price",         headerName: "Price",         editable: true, flex: 0.5 },
+    { field: "tracking_code", headerName: "Tracking Code", editable: true, flex: 0.5 },
+    { field: "date_placed",   headerName: "Date Placed",   editable: true, flex: 1 },
+    { field: "delivery_date", headerName: "Delivery Date", editable: true, flex: 1 },   
     {  
         field: "supplier", headerName: "Supplier", editable: true,
         renderCell: (params) => (
@@ -23,7 +23,7 @@ const columns: GridColDef[] = [
         )
     },
     {
-        field: "courier", headerName: "Courier", editable: true,
+        field: "courier", headerName: "Courier", editable: true, flex: 1,
         renderCell: (params) => (
             <Link to={`/shipping#courier-${params.value}`}>{params.formattedValue}</Link>
         )
@@ -151,7 +151,7 @@ const PurchasesTable: React.FC = () => {
     }, [])
 
     return (
-        <Stack direction="column">
+        <Stack direction="column" sx={{ width: '100%' }}>
             <Typography component="h2" variant="h6">
                 Purchases
             </Typography>
