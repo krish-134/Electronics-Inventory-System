@@ -294,6 +294,8 @@ INSERT INTO PurchaseIncludes (order_number, part_num) VALUES
 INSERT INTO Includes (project_name, component_part_num, quantity) VALUES 
 ('sub_bot', 'RES-10K', '10'),
 ('sub_bot', 'CAP-100NF', '5'),
+('sub_bot', 'RES-1K', '3'),
+('sub_bot', 'DIO-1N4148', '1'),
 ('soccer_bot', 'RES-1K', '20'),
 ('humanoid_robot', 'CAP-10UF', '4'),
 ('sanitizer_dispenser', 'DIO-1N4148', '2');
