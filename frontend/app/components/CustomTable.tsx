@@ -6,7 +6,7 @@ import { Modal, Stack } from "@mui/material"
 
 type Rows = readonly any[]
 
-interface CustomTableProps {
+export interface CustomTableProps {
     label: string
     getData: () => Promise<readonly any[] | undefined>
     columns: GridColDef[]
@@ -26,7 +26,7 @@ const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns, AddC
     const [modalOpen, setModalOpen] = useState(false)
 
     useEffect(() => {
-        getData().then(setRows)
+        getData().then(d => { console.log(d); setRows(d) })
     }, [])
 
     const handleModalClose = () => {
