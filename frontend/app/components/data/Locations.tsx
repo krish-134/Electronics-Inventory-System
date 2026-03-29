@@ -2,7 +2,7 @@ import type React from "react"
 import { Box, Button, Grid, Icon, IconButton, Stack, Typography } from "@mui/material"
 import { Component, Location } from '../../types'
 import { PropsWithChildren, useCallback, useEffect, useMemo, useState } from "react"
-import { Add, DragHandle, DragIndicator, MoreVert, VerticalShadesTwoTone } from "@mui/icons-material"
+import { Add, Delete, DragHandle, DragIndicator, MoreVert, VerticalShadesTwoTone } from "@mui/icons-material"
 import { DndProvider, useDrag, useDrop } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { produce } from 'immer';
@@ -11,6 +11,8 @@ type ItemProps = {
     id: string
     from: Location
 }
+
+type LocationType = "facility" | "storage" | "position"
 
 const ComponentItem: React.FC<PropsWithChildren<{ part_num: string, location: Location }>> = ({ part_num, location, children }) => {
     const [{ isDragging }, drag, dragPreview] = useDrag(() => ({
@@ -58,8 +60,13 @@ const ComponentList: React.FC<PropsWithChildren<Location & { handleDrop: (part_n
 
 const Locations: React.FC = () => {
     const [locations, setLocations] = useState<Location[]>([])
-    const [componentLocations, setComponentLocations] = useState<any>()
-    const [refresh, setRefresh] = useState<boolean>(false)
+    const [componentLocations, setComponentLocations] = useState<{
+        [facility: string]: {
+            [storage_name: string]: {
+                [position: string]: Component[]
+            }
+        }
+    }>({})
 
     useEffect(() => {
         const fetchData = async () => {
@@ -68,7 +75,14 @@ const Locations: React.FC = () => {
             const compLocJson = await fetch('http://localhost:3000/location/components')
                 .then(res => res.json())
             setLocations(locJson)
-            setComponentLocations(compLocJson)
+
+            const allLocations = locJson.reduce((acc, loc) => {
+                acc[loc.facility] ??= {};
+                acc[loc.facility][loc.storage_name] ??= {};
+                acc[loc.facility][loc.storage_name][loc.position] ??= [];
+                return acc;
+            }, compLocJson)
+            setComponentLocations(allLocations)
         }
 
         fetchData()
@@ -86,7 +100,7 @@ const Locations: React.FC = () => {
             const facilityMap: { [storage_name: string]: { [position: string]: Location[] } } = {};
             locations.forEach(loc2 => {
                 if (loc.facility != loc2.facility) return;
-                const key = loc2.label ?? loc2.storage_name;
+                const key = loc2.storage_name;
 
                 if (!facilityMap[key]) facilityMap[key] = {}
 
@@ -101,75 +115,152 @@ const Locations: React.FC = () => {
     }, [locations])
 
     const handleDrop = async (part_num: string, from: Location, to: Location) => {
+        console.log('moving', to)
         await fetch(`http://localhost:3000/component/${part_num}/move`, {
             method: "PUT",
-            body: JSON.stringify(to)
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                position: to.position_id
+            })
         })
 
         setComponentLocations(produce(draft => {
-            const from_dname = from.label ?? from.storage_name
-            const to_dname = to.label ?? to.storage_name
+            const source = draft[from.facility][from.storage_name][from.position];
+            const idx = source.findIndex(c => c.part_num === part_num);
 
-            const source = draft[from.facility][from_dname][from.position]
-            const idx = source.findIndex(c => c.part_num == part_num)
+            if (idx !== -1) {
+                const [component] = source.splice(idx, 1);
 
-            if (idx == -1) return;
+                draft[to.facility] ??= {};
+                draft[to.facility][to.storage_name] ??= {};
+                draft[to.facility][to.storage_name][to.position] ??= [];
 
-            const [component] = source.splice(idx, 1)
-
-            draft[to.facility] ??= {}
-            draft[to.facility][to_dname] ??= {}
-            draft[to.facility][to_dname][to.position] ??= []
-            draft[to.facility][to_dname][to.position].push({ ...component, ...to })
+                draft[to.facility][to.storage_name][to.position].push({
+                    ...component,
+                    facility: to.facility,
+                    storage_name: to.storage_name,
+                    position: to.position
+                });
+            }
         }))
-        setRefresh(!refresh)
+    }
+
+    /**
+     * Updates componentLocations to include new location
+     *
+     * @note Does not create the Location passed in - location is used only to store data about creation
+     */
+    const createLocation = async (location: Location, loc_type: LocationType) => {
+        // await fetch ...
+        await fetch("http://localhost:3000/location/create", {
+            method: "POST",
+            body: JSON.stringify({ location, type: loc_type })
+        })
+        switch (loc_type) {
+            case "facility":
+                setComponentLocations(produce(draft => {
+                    draft[location.facility] ??= {}
+                }))
+                setLocations(draft => {
+                    draft.push(location)
+                    return draft
+                })
+                break;
+            case "storage":
+                setComponentLocations(produce(draft => {
+                    draft[location.facility] ??= {}
+                    draft[location.facility][location.storage_name] ??= {}
+                }))
+                setLocations(draft => {
+                    draft = draft.filter(loc => loc.facility === location.facility && loc.storage_name !== "")
+                    draft.push(location)
+                    return draft
+                })
+                break;
+            case "position":
+                setComponentLocations(produce(draft => {
+                    draft[location.facility] ??= {}
+                    draft[location.facility][location.storage_name] ??= {}
+                    draft[location.facility][location.storage_name][location.position] ??= []
+                }))
+                setLocations(draft => {
+                    draft = draft.filter(loc => (loc.facility !== location.facility && loc.storage_name !== location.storage_name) || loc.position !== "")
+                    draft.push(location)
+
+                    return draft
+                })
+                break;
+        }
     }
 
     return (
         <DndProvider backend={HTML5Backend}>
             <Grid container spacing={2} sx={{ width: "100%" }}>
-                {[...Object.entries(byFacility)].map(([facility, locs]) => (
-                    <Grid key={facility} sx={{ border: "1px solid", borderColor: "divider", p: 4, borderRadius: 2, width: "100%" }}>
+                {Object.entries(componentLocations).map(([facility, storages]) => (
+                    <Grid key={facility} sx={{ border: "1px solid", borderColor: "divider", p: 4, borderRadius: 2, width: "100%", mb: 2 }}>
                         <Typography variant="h6">{facility}</Typography>
                         <Stack direction="column" gap={2} sx={{ mt: 2 }}>
-                            {[...Object.entries(locs)].map(([display_name, locs]) => (
-                                <Box key={display_name} sx={{ border: "1px solid", borderColor: "background.paper", p: 4, borderRadius: 2, width: "100%" }}>
-                                    <Typography variant="subtitle1">{display_name}</Typography>
+                            {Object.entries(storages).map(([storage_name, locs]) => (
+                                <Box key={storage_name} sx={{ border: "1px solid", borderColor: "background.paper", p: 4, borderRadius: 2, width: "100%" }}>
+                                    <Typography variant="subtitle1">{storage_name}</Typography>
                                     <Grid container size={3} spacing={1} sx={{ width: "100%", mt: 1 }}>
-                                        {Object.entries(locs).map(([position, locs]) => {
-                                            const components = componentLocations[facility]?.[display_name]?.[position];
-                                            return locs.map(loc => (
-                                                <Grid key={loc.position} sx={{ bgcolor: "background.paper", p: 2, borderRadius: 2 }} size={3}>
-                                                    {(!components || !components.length) && (
-                                                        <IconButton sx={{ position: "relative", float: "right", top: -10, right: -10, borderRadius: 2 }}>
-                                                            <MoreVert fontSize="small" />
-                                                        </IconButton>
-                                                    )}
-                                                    <ComponentList handleDrop={handleDrop} {...loc}>
-                                                        {(components && components.length) ? components.map(c => (
-                                                            <ComponentItem part_num={c.part_num} location={loc}>
-                                                                <Typography variant="caption">
-                                                                    {c.part_num}
-                                                                </Typography>
-                                                            </ComponentItem>
-                                                        )) : (
-                                                            <Typography variant="caption">No components...</Typography>
-                                                        )}
+                                        {Object.entries(locs).map(([position, components]) => {
+                                            const currentLoc = locations.find(l => l.facility === facility && l.storage_name === storage_name && l.position === position)
+                                                ?? { position_id: 0, facility, storage_name, position };
+
+                                            return (
+                                                <Grid key={position} sx={{ bgcolor: "background.paper", p: 2, borderRadius: 2 }} size={3}>
+                                                    <ComponentList handleDrop={handleDrop} {...currentLoc}>
+                                                        {components.length > 0 ?
+                                                            components.map(c => (
+                                                                <ComponentItem key={c.part_num} part_num={c.part_num} location={currentLoc}>
+                                                                    <Typography variant="caption">{c.part_num}</Typography>
+                                                                </ComponentItem>
+                                                            ))
+                                                            : (
+                                                                <Typography variant="caption" color="text.disabled">Empty</Typography>
+                                                            )}
                                                     </ComponentList>
                                                 </Grid>
-                                            ))
+                                            )
                                         })}
+                                        <Grid key="add-position" sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2 }} size={3}>
+                                            <Button sx={{ width: "100%", height: "100%", p: 2 }} disableRipple onClick={() => {
+                                                createLocation({
+                                                    facility,
+                                                    storage_name,
+                                                    position: "New Position",
+                                                }, "position")
+                                            }}
+                                            >
+                                                <Add sx={{ color: "text.secondary" }} />
+                                            </Button>
+                                        </Grid>
                                     </Grid>
                                 </Box>
                             ))}
+
+                            <Grid container size={3} spacing={1} sx={{ border: "1px solid", borderColor: "background.paper", width: "100%", mt: 1, borderRadius: 2 }}>
+                                <Button sx={{ width: "100%", height: "100%", p: 2 }} disableRipple onClick={() => createLocation({
+                                    facility,
+                                    storage_name: "New Storage",
+                                    position: ""
+                                }, "storage")}>
+                                    <Add sx={{ color: "text.secondary" }} />
+                                </Button>
+                            </Grid>
                         </Stack>
                     </Grid>
                 ))}
                 <Grid sx={{
                     border: "1px solid", borderColor: "divider", borderRadius: 2, width: "100%", display: "flex", flexDirection: "row", justifyContent: "center"
                 }}>
-                    <Button sx={{ width: "100%", height: "100%", p: 4 }} disableRipple>
-                        <Add sx={{ color: "text.primary" }} />
+                    <Button sx={{ width: "100%", height: "100%", p: 4 }} disableRipple onClick={() => createLocation({
+                        facility: "New Facility",
+                        storage_name: "",
+                        position: ""
+                    }, "facility")}>
+                        <Add sx={{ color: "text.secondary" }} />
                     </Button>
                 </Grid>
             </Grid>
