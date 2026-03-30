@@ -3,6 +3,7 @@ import { Box, Button, Grid, IconButton, Popover, Stack, TextField, Tooltip, Typo
 import { LocatedItem, Location } from '../../types'
 import { useEffect, useMemo, useState } from "react"
 import { Add, Delete, DragIndicator, Edit as EditIcon, FolderOpen, Memory, Save } from "@mui/icons-material"
+import { Link } from 'react-router'
 import { DndProvider, useDrag, useDrop } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { produce } from 'immer';
@@ -108,7 +109,7 @@ const UnplacedTray = ({ items, handleDrop }: { items: LocatedItem[], handleDrop:
                             <Tooltip title={item.type === "component" ? "Component" : "Project"}>
                                 {item.type === 'component' ? <Memory sx={{ fontSize: 14, color: 'text.secondary', display: 'flex' }} /> : <FolderOpen sx={{ fontSize: 14, color: 'primary.main', display: 'flex' }} />}
                             </Tooltip>
-                            <Typography variant="caption" sx={{ lineHeight: 1 }}>{item.id}</Typography>
+                            <Typography component={Link} to={`/${item.type === 'component' ? 'components' : 'projects'}#${item.id}`} variant="caption" sx={{ lineHeight: 1, color: 'text.primary', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>{item.id}</Typography>
                         </LocationItem>
                     ))
                     : <Typography variant="caption" color="text.disabled">No unplaced items</Typography>
@@ -392,7 +393,7 @@ const Locations: React.FC = () => {
                                                                     <Tooltip title={item.type === "component" ? "Component" : "Project"}>
                                                                         {item.type === 'component' ? <Memory sx={{ fontSize: 14, color: 'text.secondary', display: 'flex' }} /> : <FolderOpen sx={{ fontSize: 14, color: 'primary.main', display: 'flex' }} />}
                                                                     </Tooltip>
-                                                                    <Typography variant="caption" sx={{ lineHeight: 1 }}>{item.id}</Typography>
+                                                                    <Typography component={Link} to={`/${item.type === 'component' ? 'components' : 'projects'}#${item.id}`} variant="caption" sx={{ lineHeight: 1, color: 'text.primary', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>{item.id}</Typography>
                                                                 </LocationItem>
                                                             ))
                                                             : (
