@@ -7,7 +7,7 @@ import { GlobalStyles, Modal, Stack } from "@mui/material"
 
 type Rows = readonly any[]
 
-interface CustomTableProps {
+export interface CustomTableProps {
     label: string
     getData: () => Promise<readonly any[] | undefined>
     columns: GridColDef[]
