@@ -101,11 +101,73 @@ app.put('/rename', async c => {
     return c.json({ ok: true })
 })
 
+app.delete('/delete', async c => {
+    const { location, type: loc_type } = await c.req.json();
+    switch (loc_type) {
+        case "facility": {
+            const [{ id: facilityId }] = await sql`SELECT id FROM facility WHERE name = ${location.facility}`;
+            await sql`DELETE FROM position WHERE storage IN (SELECT id FROM storage WHERE facility = ${facilityId})`;
+            await sql`DELETE FROM storage WHERE facility = ${facilityId}`;
+            await sql`DELETE FROM facility WHERE id = ${facilityId}`;
+            break;
+        }
+        case "storage": {
+            const [{ id: facilityId }] = await sql`SELECT id FROM facility WHERE name = ${location.facility}`;
+            const [{ id: storageId }] = await sql`SELECT id FROM storage WHERE name = ${location.storage_name} AND facility = ${facilityId}`;
+            await sql`DELETE FROM position WHERE storage = ${storageId}`;
+            await sql`DELETE FROM storage WHERE id = ${storageId}`;
+            break;
+        }
+        case "position": {
+            const [{ id: storageId }] = await sql`
+                SELECT s.id FROM storage s
+                JOIN facility f ON s.facility = f.id
+                WHERE s.name = ${location.storage_name} AND f.name = ${location.facility}
+            `;
+            await sql`DELETE FROM position WHERE name = ${location.position} AND storage = ${storageId}`;
+            break;
+        }
+    }
+    return c.json({ ok: true })
+})
+
 app.get('/unplaced', async c => {
     const res = await sql`
         SELECT part_num, name, quantity, supplier_name
         FROM component WHERE position IS NULL
         ORDER BY part_num
+    `;
+    return c.json(res)
+})
+
+app.get('/projects', async c => {
+    const res = await sql`
+        SELECT proj.name AS project_name,
+            f.name AS facility_name,
+            s.name AS storage_name,
+            pos.name AS position_name
+        FROM project proj
+        JOIN position pos ON proj.position = pos.id
+        JOIN storage s ON pos.storage = s.id
+        JOIN facility f ON s.facility = f.id
+        ORDER BY f.id, s.id, pos.id
+    `;
+
+    const byFacility = res.reduce((acc, row) => {
+        const { facility_name, storage_name, position_name, project_name } = row;
+        acc[facility_name] ??= {};
+        acc[facility_name][storage_name] ??= {};
+        acc[facility_name][storage_name][position_name] ??= [];
+        acc[facility_name][storage_name][position_name].push({ project_name });
+        return acc;
+    }, {})
+
+    return c.json(byFacility)
+})
+
+app.get('/unplaced-projects', async c => {
+    const res = await sql`
+        SELECT name FROM project WHERE position IS NULL ORDER BY name
     `;
     return c.json(res)
 })
