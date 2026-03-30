@@ -78,8 +78,6 @@ declare module '@mui/x-data-grid' {
         rowSelectionModel: GridRowSelectionModel
         setModalOpen: React.Dispatch<React.SetStateAction<boolean>>
         allowAdd: boolean
-        tableName: string
-        onDeleteSuccess: () => void
     }
 }
 
@@ -87,17 +85,13 @@ interface ToolbarProps {
     rowSelectionModel: GridRowSelectionModel
     setModalOpen: React.Dispatch<React.SetStateAction<boolean>>
     allowAdd: boolean
-    tableName: string
-    onDeleteSuccess: () => void
 }
 
 interface DeleteConfirmProps {
     rowSelectionModel: GridRowSelectionModel
-    tableName: string
-    onDeleteSuccess: () => void
 }
 
-const DeleteConfirm: React.FC<DeleteConfirmProps> = ({ rowSelectionModel, tableName, onDeleteSuccess }) => {
+const DeleteConfirm: React.FC<DeleteConfirmProps> = ({ rowSelectionModel }) => {
     const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -108,30 +102,9 @@ const DeleteConfirm: React.FC<DeleteConfirmProps> = ({ rowSelectionModel, tableN
         setAnchorEl(null)
     }
 
-    const grid = useGridApiContext()
-
-    const deleteRows = async () => {
-        let ids: any[]
-
-        if (rowSelectionModel.type === 'exclude') {
-            const everyId = grid.current.getAllRowIds()
-            ids = everyId.filter(id => !rowSelectionModel.ids.has(id))
-        } else {
-            ids = [... rowSelectionModel.ids]
-        }
-
-        await Promise.all(
-            ids.map((id: any) =>
-                fetch(`http://localhost:3000/${tableName}/${id}`, { method: "DELETE" })
-                .then(res => {
-                    console.log(`DELETE: $ {tableName}/{id} status:`, res.status)
-                    return res
-                })
-            )
-        )
-
-        handleClose()
-        onDeleteSuccess()
+    const deleteRows = () => {
+        const ids = rowSelectionModel.ids
+        // TODO: delete rows
     }
 
     const open = !!anchorEl
