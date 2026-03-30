@@ -1,14 +1,15 @@
 import type React from "react"
 import { useEffect, useState } from "react"
-import { Theme, useTheme } from '@mui/material/styles';
+import { alpha, Theme, useTheme } from '@mui/material/styles';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import Button from "@mui/material/Button";
-import { Box, Chip, Divider, TextField } from "@mui/material";
+import { Box, Chip, Divider, Slide, Snackbar, TextField } from "@mui/material";
 import DisplayTable from "../components/DisplayTable";
+import Toast, { ToastStyle } from "../components/Toast";
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -68,6 +69,10 @@ function getStyles(name: string, personName: string[], theme: Theme) {
   };
 }
 
+function SlideTransition(props: any) {
+    return <Slide {...props} direction="down" />;
+}
+
 const Locations: React.FC = () => {
     const theme = useTheme();
     const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
@@ -76,6 +81,7 @@ const Locations: React.FC = () => {
     const [queriedValue, setQueriedValue] = useState<number>(0);
 
     const [errorText, setErrorText] = useState<string>();
+    const [toastOpen, setToastOpen] = useState<boolean>(false);
     const [invalidFields, setInvalidFields] = useState<boolean[]>([false, false, false]);
 
     const [returned, setReturned] = useState<object[]>([]);
@@ -89,6 +95,7 @@ const Locations: React.FC = () => {
     function request() {
         if (!selectedAttribute || !selectedOperator || selectedColumns.length <= 0) {
             setErrorText("Missing required fields!");
+            setToastOpen(true);
             setInvalidFields([
                 !selectedAttribute,
                 !selectedOperator,
@@ -102,8 +109,13 @@ const Locations: React.FC = () => {
         const queryParams = `?fields=${selectedColumns.join(',')}&atr=${selectedAttribute}&op=${selectedOperator}&val=${queriedValue}`;
         fetch(`http://localhost:3000/location${queryParams}`)
             .then(res => res.json())
-            .then(data => setReturned(data))
-            .then(_ => {if (!returned.length) setErrorText("No results found with these restrictions!")})
+            .then(data => {
+                setReturned(data);
+                if (!data.length) {
+                    setErrorText("No results found with these restrictions!");
+                    setToastOpen(true);
+                }
+            })
             .catch(err => console.error(err));
     }
 
@@ -119,6 +131,8 @@ const Locations: React.FC = () => {
 
     return (
         <div className="flex flex-col my-3 space-y-6 pt-9 w-full">
+            <Toast open={toastOpen} setOpen={setToastOpen} text={errorText} style={ToastStyle.ERROR} />
+
             <p>
                 Use this page to find the locations of your components, as well as extra details about it and its placement.
             </p>
@@ -210,12 +224,8 @@ const Locations: React.FC = () => {
             
             <Button onClick={request} sx={{ justifySelf: "left", width: 200, border: 1, mb: 1}}>Find my parts!</Button>
 
-            {returned.length > 0 ?
+            {returned.length > 0 &&
                 <DisplayTable label={"Locations"} data={returned}/>
-                :
-                <p className="text-red-400 pt-3">
-                    {errorText}
-                </p>
             }
         </div>
     )
