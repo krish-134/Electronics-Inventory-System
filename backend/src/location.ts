@@ -5,15 +5,50 @@ import { Component, Location as ItemLocation } from "./types"
 const app = new Hono()
 
 app.get('/', async c => {
-    const locations = await sql`
-        SELECT p.id AS position_id, p.name AS position, s.name AS storage_name, f.name AS facility
-        FROM facility f
-        LEFT JOIN storage s ON s.facility = f.id
-        LEFT JOIN position p ON p.storage = s.id
-        ORDER BY f.id, s.id, p.id
-    `;
+    const fields = c.req.query('fields');
+    const atr = c.req.query('atr');
+    const op = c.req.query('op');
+    const val = c.req.query('val');
 
-    return c.json(locations)
+    if (!fields) {
+        const locations = await sql`
+            SELECT p.id AS position_id, p.name AS position, s.name AS storage_name, f.name AS facility
+            FROM facility f
+            LEFT JOIN storage s ON s.facility = f.id
+            LEFT JOIN position p ON p.storage = s.id
+            ORDER BY f.id, s.id, p.id
+        `;
+        return c.json(locations)
+    }
+
+    const columns = fields.split(',');
+    const base = sql`(
+        SELECT c.part_num, c.price, c.name, c.package, c.tolerance, c.quantity,
+               c.voltage_rating, c.additional, c.supplier_name,
+               p.name AS position, s.name AS storage_name, f.name AS facility
+        FROM component c
+        JOIN position p ON c.position = p.id
+        JOIN storage s ON p.storage = s.id
+        JOIN facility f ON s.facility = f.id
+    ) AS loc`;
+
+    // op doesn't work when inlined with sql() for some reason
+    switch (op) {
+        case "e":
+            return c.json(await sql`SELECT DISTINCT ${sql(columns)} FROM ${base} WHERE ${sql(atr)} = ${val}`);
+        case "lt":
+            return c.json(await sql`SELECT DISTINCT ${sql(columns)} FROM ${base} WHERE ${sql(atr)} < ${val}`);
+        case "lte":
+            return c.json(await sql`SELECT DISTINCT ${sql(columns)} FROM ${base} WHERE ${sql(atr)} <= ${val}`);
+        case "gt":
+            return c.json(await sql`SELECT DISTINCT ${sql(columns)} FROM ${base} WHERE ${sql(atr)} > ${val}`);
+        case "gte":
+            return c.json(await sql`SELECT DISTINCT ${sql(columns)} FROM ${base} WHERE ${sql(atr)} >= ${val}`);
+        case "ne":
+            return c.json(await sql`SELECT DISTINCT ${sql(columns)} FROM ${base} WHERE ${sql(atr)} != ${val}`);
+    }
+
+    return c.json([])
 })
 
 app.get('/components', async c => {
