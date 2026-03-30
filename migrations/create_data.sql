@@ -5,15 +5,31 @@ CREATE TABLE Users (
     real_name VARCHAR NOT NULL
 );
 
-CREATE TABLE Location (
-    storage_name VARCHAR,
-    position     VARCHAR,
-    facility     VARCHAR,
-    type         VARCHAR,
-    label        VARCHAR,
-    last_updated TIMESTAMP,
+CREATE TABLE Facility (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR UNIQUE
+);
 
-    PRIMARY KEY (storage_name, position, facility)
+CREATE TABLE Storage (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR,
+    facility INT,
+
+    UNIQUE (name, facility),
+
+    FOREIGN KEY (facility) REFERENCES Facility(id)
+        ON DELETE NO ACTION
+);
+
+CREATE TABLE Position (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR,
+    storage INT,
+
+    UNIQUE (name, storage),
+
+    FOREIGN KEY (storage) REFERENCES Storage(id)
+        ON DELETE NO ACTION
 );
 
 CREATE TABLE Supplier (
@@ -25,16 +41,13 @@ CREATE TABLE Supplier (
 
 CREATE TABLE Project (
     name         VARCHAR PRIMARY KEY,
-    created_at   TIMESTAMP NOT NULL,
+    created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     purpose      TEXT,
-    last_updated TIMESTAMP,
+    last_updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    storage_name VARCHAR,
-    position     VARCHAR,
-    facility     VARCHAR,
+    position     INT,
 
-    FOREIGN KEY (storage_name, position, facility)
-        REFERENCES Location(storage_name, position, facility)
+    FOREIGN KEY (position) REFERENCES Position(id)
         ON DELETE NO ACTION
 );
 
@@ -48,17 +61,13 @@ CREATE TABLE Component (
     voltage_rating DECIMAL(16,4),
     additional     JSONB,
     
-    storage_name   VARCHAR,
-    position       VARCHAR,
-    facility       VARCHAR,
+    position       INT,
 
     supplier_name  VARCHAR NOT NULL,
 
-    FOREIGN KEY (storage_name, position, facility)
-        REFERENCES Location(storage_name, position, facility)
+    FOREIGN KEY (position) REFERENCES Position(id)
         ON DELETE SET NULL,
 
-        
     FOREIGN KEY (supplier_name)
         REFERENCES Supplier(name)
         ON DELETE NO ACTION
@@ -117,7 +126,7 @@ CREATE TABLE Courier (
 CREATE TABLE Version (
     version_number VARCHAR,
     title          VARCHAR NOT NULL,
-    date           TIMESTAMP NOT NULL,
+    date           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     snapshot       JSONB NOT NULL,
     created_by     VARCHAR,
     project_name   VARCHAR,
@@ -213,12 +222,25 @@ INSERT INTO Users (username, password, email, real_name) VALUES
 ('sigmamale', 'grindset', 'idontbelieveinemails@fake.iop', 'Elon Musk');
 
 -- Location --
-INSERT INTO Location (storage_name, position, facility, type, label, last_updated) VALUES 
-('resistors', 'row1_col1', 'workshop', 'bin', 'Resistors', '2026-03-06 10:00:00'),
-('capacitors', 'row1_col2', 'workshop', 'bin', 'Capacitors', '2026-03-06 10:00:00'),
-('projects', 'cabinet1_shelf3', 'storage_room', 'shelf', 'Projects Storage', '2026-03-06 10:00:00'),
-('large', 'drawer1', 'home', 'drawer', 'Larger Items', '2026-03-06 10:00:00'),
-('miscellaneous', 'cabinet2_shelf2', 'storage_room', 'shelf', 'Unsorted Electronics', '2026-03-06 10:00:00');
+INSERT INTO Facility (id, name) VALUES
+    (1, 'workshop'),
+    (2, 'storage_room'),
+    (3, 'home');
+
+INSERT INTO Storage (id, name, facility) VALUES
+    (1, 'resistors', 1),
+    (2, 'capacitors', 1),
+    (3, 'projects', 2),
+    (4, 'miscellaneous', 2),
+    (5, 'large', 3);
+
+INSERT INTO Position (id, name, storage) VALUES
+    (1, 'row1_col1', 1),
+    (2, 'row2_col1', 1),
+    (3, 'row1_col1', 2),
+    (4, 'cabinet1_shelf3', 3),
+    (5, 'drawer1', 5),
+    (6, 'cabinet2_shelf2', 4);
 
 -- Supplier --
 INSERT INTO Supplier (name, url, country, contact_email) VALUES 
@@ -229,20 +251,20 @@ INSERT INTO Supplier (name, url, country, contact_email) VALUES
 ('farnell', 'https://www.farnell.com', 'UK', 'support@farnell.com');
 
 -- Project --
-INSERT INTO Project (name, created_at, purpose, last_updated, storage_name, position, facility) VALUES 
-('soccer_bot', '2026-03-06 10:00:00', 'Miniture soccer playing robot', '2026-03-06 10:00:00', 'projects', 'cabinet1_shelf3', 'storage_room'),
-('sub_bot', '2026-03-06 10:00:00', 'AUV for Robosub 2026', '2026-03-06 10:00:00', 'projects', 'cabinet1_shelf3', 'storage_room'),
-('temperature_reader', '2026-03-06 10:00:00', 'Project that can display the temperature and humidity', '2026-03-06 10:00:00', 'projects', 'cabinet1_shelf3', 'storage_room'),
-('sanitizer_dispenser', '2026-03-06 10:00:00', 'Automatic hand sanitizer dispenser that uses ultrasonic sensors', '2026-03-06 10:00:00', 'projects', 'cabinet1_shelf3', 'storage_room'),
-('humanoid_robot', '2026-03-06 10:00:00', 'Creating life', '2026-03-06 10:00:00', 'projects', 'cabinet1_shelf3', 'storage_room');
+INSERT INTO Project (name, created_at, purpose, last_updated, position) VALUES 
+('soccer_bot', '2026-03-06 10:00:00', 'Miniture soccer playing robot', '2026-03-06 10:00:00', 4),
+('sub_bot', '2026-03-06 10:00:00', 'AUV for Robosub 2026', '2026-03-06 10:00:00', 4),
+('temperature_reader', '2026-03-06 10:00:00', 'Project that can display the temperature and humidity', '2026-03-06 10:00:00', 4),
+('sanitizer_dispenser', '2026-03-06 10:00:00', 'Automatic hand sanitizer dispenser that uses ultrasonic sensors', '2026-03-06 10:00:00', 4),
+('humanoid_robot', '2026-03-06 10:00:00', 'Creating life', '2026-03-06 10:00:00', 4);
 
 -- Component --
-INSERT INTO Component (part_num, price, name, package, tolerance, quantity, voltage_rating, additional, storage_name, position, facility, supplier_name) VALUES 
-('CAP-100NF', 0.10, '100nF Capacitor', 'all', 0.100000, 200, 50.0000, '{"quality": "good"}', 'capacitors', 'row1_col2', 'workshop', 'digikey'),
-('CAP-10UF', 0.13, '10uF Capacitor', 'all', 0.200000, 50, 25.0000, '{}', 'capacitors', 'row1_col2', 'workshop', 'farnell'),
-('RES-10K', 0.50, '10k Resistor', 'all', 0.010000, 500, 50.0000, '{}', 'resistors', 'row1_col1', 'workshop', 'lcsc'),
-('RES-1K', 0.12, '1k Resistor', 'all', 0.010000, 300, 50.0000, '{}', 'resistors', 'row1_col1', 'workshop', 'lcsc'),
-('DIO-1N4148', 0.19, 'Diode', 'all', 0.010000, 100, 100.0000, '{}', 'miscellaneous', 'cabinet2_shelf2', 'storage_room', 'mouser');
+INSERT INTO Component (part_num, price, name, package, tolerance, quantity, voltage_rating, additional, position, supplier_name) VALUES 
+('CAP-100NF', 0.10, '100nF Capacitor', 'all', 0.100000, 200, 50.0000, '{"quality": "good"}', 2, 'digikey'),
+('CAP-10UF', 0.13, '10uF Capacitor', 'all', 0.200000, 50, 25.0000, '{}', 3, 'farnell'),
+('RES-10K', 0.50, '10k Resistor', 'all', 0.010000, 500, 50.0000, '{}', 1, 'lcsc'),
+('RES-1K', 0.12, '1k Resistor', 'all', 0.010000, 300, 50.0000, '{}', 1, 'lcsc'),
+('DIO-1N4148', 0.19, 'Diode', 'all', 0.010000, 100, 100.0000, '{}', 6, 'mouser');
 
 -- Capacitor --
 INSERT INTO Capacitor (temp_coeff, type, capacitance, part_num) VALUES 
@@ -294,6 +316,8 @@ INSERT INTO PurchaseIncludes (order_number, part_num) VALUES
 INSERT INTO Includes (project_name, component_part_num, quantity) VALUES 
 ('sub_bot', 'RES-10K', '10'),
 ('sub_bot', 'CAP-100NF', '5'),
+('sub_bot', 'RES-1K', '3'),
+('sub_bot', 'DIO-1N4148', '1'),
 ('soccer_bot', 'RES-1K', '20'),
 ('humanoid_robot', 'CAP-10UF', '4'),
 ('sanitizer_dispenser', 'DIO-1N4148', '2');
@@ -305,3 +329,8 @@ INSERT INTO Makes (project_name, username) VALUES
 ('humanoid_robot', 'sigmamale'),
 ('soccer_bot', 'w6i9k'),
 ('sanitizer_dispenser', 'w6i9k');
+
+-- Reset sequences after explicit ID inserts
+SELECT setval('facility_id_seq', (SELECT MAX(id) FROM facility));
+SELECT setval('storage_id_seq', (SELECT MAX(id) FROM storage));
+SELECT setval('position_id_seq', (SELECT MAX(id) FROM position));
