@@ -15,6 +15,7 @@
     "@hookform/error-message": "^2.0.1",
     "@mui/icons-material": "^7.3.9",
     "@mui/material": "^7.3.9",
+    "@mui/x-charts": "^8.28.0",
     "@mui/x-data-grid": "^8.27.5",
     "@mui/x-tree-view": "^8.27.2",
     "@react-router/dev": "^7.13.1",
@@ -43,6 +44,10 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "npm:rolldown-vite@7.2.5"
+  },
+  "peerDependencies": {
+    "react": "^17.0.0 || ^18.0.0 || ^19.0.0",
+    "react-dom": "^17.0.0 || ^18.0.0 || ^19.0.0"
   },
   "overrides": {
     "vite": "npm:rolldown-vite@7.2.5"
