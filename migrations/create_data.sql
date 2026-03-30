@@ -327,3 +327,8 @@ INSERT INTO Makes (project_name, username) VALUES
 ('humanoid_robot', 'sigmamale'),
 ('soccer_bot', 'w6i9k'),
 ('sanitizer_dispenser', 'w6i9k');
+
+-- Reset sequences after explicit ID inserts
+SELECT setval('facility_id_seq', (SELECT MAX(id) FROM facility));
+SELECT setval('storage_id_seq', (SELECT MAX(id) FROM storage));
+SELECT setval('position_id_seq', (SELECT MAX(id) FROM position));

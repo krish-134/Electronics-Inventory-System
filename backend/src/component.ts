@@ -167,7 +167,7 @@ app.put("/:part_num/move", async c => {
         position
     } = body
 
-    if (!position) return c.status(200)
+    if (position === undefined) return c.status(200)
 
     const res = await sql`UPDATE component SET position=${position} WHERE part_num=${part_num};`
 
