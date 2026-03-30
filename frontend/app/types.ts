@@ -41,6 +41,11 @@ export interface Location {
     facility: string
 }
 
+export type LocatedItem = {
+    id: string
+    type: 'component' | 'project'
+}
+
 export interface Courier {
     name: string
     code_format?: string
