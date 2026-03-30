@@ -30,7 +30,9 @@ const LocationItem = ({ id, itemType, location, children }: React.PropsWithChild
     return (
         <div ref={dragPreview} style={{ opacity: isDragging ? 0.5 : 1 }}>
             <Stack direction="row" gap={0.5} sx={{ alignItems: 'center' }}>
-                <DragIndicator ref={drag} sx={{ cursor: "grab", display: 'flex' }} fontSize="small" />
+                <div role="handle" ref={drag}>
+                    <DragIndicator sx={{ cursor: "grab", display: 'flex' }} fontSize="small" />
+                </div>
                 {children}
             </Stack>
         </div>
@@ -463,7 +465,7 @@ const Locations: React.FC = () => {
                     </Stack>
                 </Stack>
             </Popover>
-        </DndProvider >
+        </DndProvider>
     )
 }
 
