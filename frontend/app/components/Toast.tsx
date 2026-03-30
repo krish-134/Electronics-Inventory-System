@@ -20,8 +20,24 @@ const Styles: ReadonlyMap<number, object> = new Map([
 			}
 		}
 	}],
-  [ToastStyle.WARNING, {}], // TODO
-  [ToastStyle.SUCCESS, {}],
+  [ToastStyle.WARNING, {
+		content: {
+			sx: {
+				bgcolor: alpha('#ffef62', 0.25),
+				backgroundImage: 'none',
+				color: '#ffef62'
+			}
+		}
+	}], 
+  [ToastStyle.SUCCESS, {
+		content: {
+			sx: {
+				bgcolor: alpha('#4caf50', 0.25),
+				backgroundImage: 'none',
+				color: '#4caf50'
+			}
+		}
+	}],
 ]);
 
 function Toast({ open, setOpen, text, style } : {open: any, setOpen: any, text: string | undefined, style: ToastStyle}) : React.JSX.Element {
