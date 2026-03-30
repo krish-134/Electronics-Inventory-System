@@ -1,10 +1,9 @@
-import { Button, ButtonGroup, InputAdornment, Menu, MenuItem, Popover, Stack, styled, tableBodyClasses, TextField, Tooltip, Typography } from "@mui/material"
+import { Button, ButtonGroup, InputAdornment, Menu, MenuItem, Popover, Stack, styled, TextField, Tooltip, Typography } from "@mui/material"
 import { ColumnsPanelTrigger, ExportCsv, ExportPrint, FilterPanelTrigger, GridDownloadIcon, GridFilterListIcon, GridRowSelectionModel, GridSearchIcon, GridToolbarColumnsButton, GridViewColumnIcon, QuickFilter, QuickFilterClear, QuickFilterControl, QuickFilterTrigger, Toolbar, ToolbarButton, useGridApiContext } from "@mui/x-data-grid"
 import { Add, Cancel as CancelIcon, PlusOne } from '@mui/icons-material'
 import type React from "react"
 import { useRef, useState } from "react"
 import { IconTrash } from "@tabler/icons-react"
-import { gridAdditionalRowGroupsSelector } from "@mui/x-data-grid/internals"
 
 interface OwnerState {
     expanded: boolean
@@ -77,24 +76,22 @@ const ExportMenu: React.FC = () => {
 declare module '@mui/x-data-grid' {
     interface ToolbarPropsOverrides {
         rowSelectionModel: GridRowSelectionModel
-        tableName: string
-        onDeleteSuccess: () => void
+        setModalOpen: React.Dispatch<React.SetStateAction<boolean>>
+        allowAdd: boolean
     }
 }
 
 interface ToolbarProps {
     rowSelectionModel: GridRowSelectionModel
-    tableName: string
-    onDeleteSuccess: () => void
+    setModalOpen: React.Dispatch<React.SetStateAction<boolean>>
+    allowAdd: boolean
 }
 
 interface DeleteConfirmProps {
     rowSelectionModel: GridRowSelectionModel
-    tableName: string
-    onDeleteSuccess: () => void
 }
 
-const DeleteConfirm: React.FC<DeleteConfirmProps> = ({ rowSelectionModel, tableName, onDeleteSuccess }) => {
+const DeleteConfirm: React.FC<DeleteConfirmProps> = ({ rowSelectionModel }) => {
     const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -105,32 +102,9 @@ const DeleteConfirm: React.FC<DeleteConfirmProps> = ({ rowSelectionModel, tableN
         setAnchorEl(null)
     }
 
-    const grid = useGridApiContext()
-
-    const deleteRows = async () => {
-        // const ids = [... rowSelectionModel.ids]
-        let ids: any[]
-
-        if (rowSelectionModel.type === 'exclude') {
-            const everyId = grid.current.getAllRowIds()
-            ids = everyId.filter(id => !rowSelectionModel.ids.has(id))
-        } else {
-            ids = [... rowSelectionModel.ids]
-        }
- 
+    const deleteRows = () => {
+        const ids = rowSelectionModel.ids
         // TODO: delete rows
-        await Promise.all(
-            ids.map((id: any) =>
-                fetch(`http://localhost:3000/${tableName}/${id}`, { method: "DELETE" })
-                .then(res => {
-                    console.log(`DELETE: $ {tableName}/{id} status:`, res.status)
-                    return res
-                })
-            )
-        )
-
-        handleClose()
-        onDeleteSuccess()
     }
 
     const open = !!anchorEl
@@ -163,22 +137,18 @@ const DeleteConfirm: React.FC<DeleteConfirmProps> = ({ rowSelectionModel, tableN
     )
 }
 
-const CustomToolbar: React.FC<ToolbarProps> = ({ rowSelectionModel, tableName, onDeleteSuccess }) => {
+const CustomToolbar: React.FC<ToolbarProps> = ({ rowSelectionModel, setModalOpen, allowAdd }) => {
     const grid = useGridApiContext()
-    const isSelected = rowSelectionModel?.ids.size > 0 || rowSelectionModel?.type === 'exclude'
     return (
         <Toolbar>
-            <ToolbarButton>
-                <Add />
-            </ToolbarButton>
-            {isSelected && (
-                <DeleteConfirm 
-                    rowSelectionModel={rowSelectionModel} 
-                    tableName={tableName} 
-                    onDeleteSuccess={onDeleteSuccess}
-                />
+            {allowAdd && (
+                <ToolbarButton onClick={() => setModalOpen(true)}>
+                    <Add />
+                </ToolbarButton>
             )}
-            <div style={{ flex: 1 }} />
+            {rowSelectionModel?.ids.size > 0 && (
+                <DeleteConfirm rowSelectionModel={rowSelectionModel} />
+            )}
             <ColumnsPanelTrigger render={<ToolbarButton />}>
                 <GridViewColumnIcon fontSize="small" />
             </ColumnsPanelTrigger>
@@ -222,7 +192,7 @@ const CustomToolbar: React.FC<ToolbarProps> = ({ rowSelectionModel, tableName, o
                                                 edge="end"
                                                 size="small"
                                                 aria-label="Clear search"
-                                                material={{ sx: { marginRight: -0.75 } }}
+                                                material={{ sx: { border: "none", background: "none", marginRight: -0.75 } }}
                                             >
                                                 <CancelIcon fontSize="small" />
                                             </QuickFilterClear>
