@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import 'dotenv/config'
 
+import insights from './insights'
 import component from './component'
 import location from './location'
 import project from './project'
@@ -18,6 +19,7 @@ app.get('/', (c) => {
     return c.text('Hello Hono!')
 })
 
+app.route('/insights', insights)
 app.route('/component', component)
 app.route('/location', location)
 app.route('/project', project)
