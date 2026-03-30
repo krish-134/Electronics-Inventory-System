@@ -338,13 +338,9 @@ const Locations: React.FC = () => {
     return (
         <DndProvider backend={HTML5Backend}>
             <Stack direction="row" sx={{ justifyContent: "flex-end", width: "100%" }}>
-                <IconButton onClick={() => setEditing(e => !e)}>
-                    {editing ? (
-                        <Save />
-                    ) : (
-                        <EditIcon />
-                    )}
-                </IconButton>
+                <Button variant="outlined" onClick={() => setEditing(e => !e)} startIcon={editing ? (<Save />) : (<EditIcon />)}>
+                    {editing ? "Save" : "Edit" }
+                </Button>
             </Stack>
             <UnplacedTray items={unplacedItems} handleDrop={handleDrop} />
             <Grid container spacing={2} sx={{ width: "100%" }}>
