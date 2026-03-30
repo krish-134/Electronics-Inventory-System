@@ -29,7 +29,7 @@ const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns, AddC
     const hasScrolled = useRef(false)
 
     useEffect(() => {
-        getData().then(d => { console.log(d); setRows(d) })
+        getData().then(setRows)
     }, [])
 
     useEffect(() => {
