@@ -159,4 +159,19 @@ app.delete("/:part_num", async (c) => {
     return c.json(part_num, 200)
 })
 
+app.put("/:part_num/move", async c => {
+    const { part_num } = c.req.param();
+    const body = await c.req.json();
+
+    const {
+        position
+    } = body
+
+    if (position === undefined) return c.status(200)
+
+    const res = await sql`UPDATE component SET position=${position} WHERE part_num=${part_num};`
+
+    return c.json(res, 200)
+})
+
 export default app

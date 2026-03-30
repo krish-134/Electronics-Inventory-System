@@ -1,0 +1,17 @@
+-- Order matters!
+DROP TABLE resistor;
+DROP TABLE capacitor;
+DROP TABLE diode;
+DROP TABLE version;
+DROP TABLE purchaseincludes;
+DROP TABLE makes;
+DROP TABLE users;
+DROP TABLE includes;
+DROP TABLE component;
+DROP TABLE project;
+DROP TABLE position;
+DROP TABLE storage;
+DROP TABLE facility;
+DROP TABLE purchase;
+DROP TABLE courier;
+DROP TABLE supplier;
