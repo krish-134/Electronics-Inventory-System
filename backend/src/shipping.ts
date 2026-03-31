@@ -54,10 +54,18 @@ app.put('/supplier/:name',  async c => {
 
 app.delete('/supplier/:name', async c => {
     const { name } = c.req.param();
-    await sql`
-        DELETE FROM supplier
-        WHERE name = ${name}`
-    return c.json(name, 200)
+    
+    try {
+        await sql`
+            DELETE FROM supplier
+            WHERE name = ${name}`
+        return c.json(name, 200)
+    } catch (e: any) {
+        if (e.code === '23503') {
+            return c.json({ error: `Cannot delete ${name} - it is still referenced by a component` }, 409)
+        }
+        return c.json({ error: e.message }, 500 )
+    }
 })
 
 // -------------- COURIERS --------------

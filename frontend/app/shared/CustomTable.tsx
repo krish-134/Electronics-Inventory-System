@@ -1,17 +1,19 @@
 import { DataGrid, GridColDef, GridRowModel, GridRowSelectionModel } from "@mui/x-data-grid"
 import type React from "react"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { useLocation } from "react-router"
 import CustomToolbar from "./CustomToolbar"
-import { Modal, Stack } from "@mui/material"
+import { GlobalStyles, Modal, Stack } from "@mui/material"
 
 type Rows = readonly any[]
 
-interface CustomTableProps {
+export interface CustomTableProps {
     label: string
     getData: () => Promise<readonly any[] | undefined>
     columns: GridColDef[]
     AddCard?: React.FC<AddCardProps>
     mutateRow: (row: any, oldRow: any) => any // TODO: figure out types
+    tableName?: string
 }
 
 export interface AddCardProps {
@@ -20,14 +22,30 @@ export interface AddCardProps {
     handleAdd: (r: Rows) => void
 }
 
-const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns, AddCard, mutateRow }) => {
+const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns, AddCard, mutateRow, tableName }) => {
     const [rows, setRows] = useState<Rows | undefined>([])
     const [rowSelectionModel, setRowSelectionModel] = useState<GridRowSelectionModel>()
     const [modalOpen, setModalOpen] = useState(false)
+    const location = useLocation()
+    const hasScrolled = useRef(false)
 
     useEffect(() => {
         getData().then(setRows)
     }, [])
+
+    useEffect(() => {
+        if (!location.hash || !rows?.length || hasScrolled.current) return;
+        const id = decodeURIComponent(location.hash.slice(1));
+        requestAnimationFrame(() => {
+            const el = document.querySelector(`div[data-id="${CSS.escape(id)}"]`);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el.classList.add('row-highlight');
+                el.addEventListener('animationend', () => el.classList.remove('row-highlight'), { once: true });
+                hasScrolled.current = true;
+            }
+        });
+    }, [rows, location.hash])
 
     const handleModalClose = () => {
     }
@@ -50,6 +68,16 @@ const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns, AddC
 
     return (
         <>
+            <GlobalStyles styles={{
+                '@keyframes row-flash': {
+                    '0%': { backgroundColor: 'transparent' },
+                    '30%': { backgroundColor: 'rgba(25, 118, 210, 0.15)' },
+                    '100%': { backgroundColor: 'transparent' },
+                },
+                '.row-highlight': {
+                    animation: 'row-flash 3s ease',
+                },
+            }} />
             {AddCard && (
                 <Modal open={modalOpen}
                     onClose={handleModalClose}
@@ -79,8 +107,10 @@ const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns, AddC
                     toolbar: {
                         rowSelectionModel,
                         setModalOpen,
-                        allowAdd: !!AddCard
-                    }
+                        allowAdd: !!AddCard,
+                        tableName,
+                        onDeleteSuccess: () => getData().then(setRows)
+                    },
                 }}
                 rowSelectionModel={rowSelectionModel}
                 onRowSelectionModelChange={setRowSelectionModel}

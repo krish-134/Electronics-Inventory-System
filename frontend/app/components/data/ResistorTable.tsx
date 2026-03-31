@@ -2,7 +2,7 @@ import { Avatar, Stack, Typography } from "@mui/material"
 import { type GridColDef } from "@mui/x-data-grid"
 import type React from "react"
 import { IconCircuitResistor } from '@tabler/icons-react'
-import CustomTable, { CustomTableProps } from "../CustomTable"
+import CustomTable, { CustomTableProps } from "../../shared/CustomTable"
 import { useCallback } from "react"
 
 const columns: GridColDef[] = [
