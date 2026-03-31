@@ -9,7 +9,7 @@ import { Location, Supplier } from "../../types"
 import JsonEditComponent from "../JsonEditComponent"
 import JsonViewComponent from "../JsonViewComponent"
 import { ErrorOutline, Inventory, Store } from "@mui/icons-material"
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, Controller, Validate, FieldValues, FieldValue, ValidateResult } from 'react-hook-form'
 import { ErrorMessage } from '@hookform/error-message'
 
 const columns: GridColDef[] = [
@@ -77,7 +77,6 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
     const [supplierOptions, setSupplierOptions] = useState<Supplier[]>([])
     const [componentType, setComponentType] = useState<string>("");
 
-    // TODO: error handling
     const { handleSubmit, control, register, formState: { errors } } = useForm()
 
     useEffect(() => {
@@ -96,9 +95,16 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
             })
     }, [storageOptions])
 
-    const onSubmit = (data) => {
-        console.log('submitting', data)
+    const validateAdditional: Validate<any, FieldValues> = (value: any): ValidateResult => {
+        try {
+            JSON.parse(value);
+            return undefined;
+        } catch (e) {
+            return "Invalid JSON in Additional Data"
+        }
+    }
 
+    const onSubmit = (data) => {
         const {
             part_num: partNum,
             price,
@@ -117,6 +123,13 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
 
         let position = storage ? JSON.parse(storage).position_id : null;
         let supplier_name = JSON.parse(supplier).name
+
+        let additional_json = null;
+
+        try {
+            additional_json = JSON.parse(additional)
+        } catch (e) {
+        }
 
         const newRow = {
             part_num: partNum,
@@ -200,7 +213,7 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
                         </Stack>
                         <Stack direction="row" gap={1} sx={{ width: '100%' }}>
                             <TextField {...register('package', { required: 'Package is required' })} sx={{ width: '100%' }} label="Package" variant="outlined" />
-                            <TextField {...register('tolerance', { required: 'Tolerance is required', pattern: { value: /^0(\.[0-9]*)?$/, message: "Tolerance must be between 0 and 1" } })} sx={{ width: '100%' }} label="Tolerance" variant="outlined" type="number" />
+                            <TextField {...register('tolerance', { required: 'Tolerance is required', pattern: { value: /^0(\.[0-9]*)?$/, message: "Tolerance must be between 0 and 1" } })} sx={{ width: '100%' }} label="Tolerance" variant="outlined" inputMode="numeric" slotProps={{ htmlInput: { pattern: "^0(\.[0-9]*)?$" } }} />
                             <TextField {...register('voltage_rating', { required: 'Voltage Rating is required' })} sx={{ width: '100%' }} label="Voltage Rating" variant="outlined" slotProps={{
                                 input: {
                                     endAdornment: <InputAdornment position="end">V</InputAdornment>
@@ -233,7 +246,7 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
                                 )} />
                             </FormControl>
                         </Stack>
-                        <TextField {...register('additional', { required: 'Additional Data is required' })} label="Additional Data" variant="outlined" multiline rows={4} />
+                        <TextField {...register('additional', { required: "Additional Data is required", validate: validateAdditional })} label="Additional Data" variant="outlined" multiline rows={4} />
                         {(componentType === "resistor" || componentType === "capacitor" || componentType === "diode") && (
                             <>
                                 <Divider />
