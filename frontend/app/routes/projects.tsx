@@ -13,10 +13,12 @@ const Projects: React.FC = () => {
     function request() {
         fetch(`http://localhost:3000/project?has-all-components=true`)
             .then(res => res.json())
-            .then(data => setReturned(data))
-            .then(_ => {if (!returned.length) {
-                setErrorText("None of your projects use all of your components!")}
-                setToastOpen(true);
+            .then(data => {
+                setReturned(data)
+                if (!data.length) {
+                    setErrorText("None of your projects use all of your components!");
+                    setToastOpen(true);
+                }
             })
             .catch(err => console.error(err));
     }
