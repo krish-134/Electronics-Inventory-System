@@ -150,13 +150,36 @@ UPDATE diode SET vforward=${vforward}, vreverse=${vreverse}, dcapacitance=${diod
 app.delete("/:part_num", async (c) => {
     const { part_num } = c.req.param();
 
-    await sql`
-        DELETE 
-        FROM component
-        WHERE part_num = ${part_num}
-    `;
+    try {
+        await sql`
+            DELETE 
+            FROM component
+            WHERE part_num = ${part_num}
+        `;
+        return c.json(part_num, 200)
+    } catch (e: any) {
+        if (e.code === '23503') {
+            return c.json({ error: `Cannot delete ${part_num} - it is still referenced by a purchase order` }, 409)
+        }
+        return c.json({ error: e.message }, 500 )
+    }
+    
+    // return c.json(part_num, 200)
+})
 
-    return c.json(part_num, 200)
+app.put("/:part_num/move", async c => {
+    const { part_num } = c.req.param();
+    const body = await c.req.json();
+
+    const {
+        position
+    } = body
+
+    if (position === undefined) return c.status(200)
+
+    const res = await sql`UPDATE component SET position=${position} WHERE part_num=${part_num};`
+
+    return c.json(res, 200)
 })
 
 export default app

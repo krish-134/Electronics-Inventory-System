@@ -2,7 +2,7 @@ import { Avatar, Stack, Typography } from "@mui/material"
 import { type GridColDef } from "@mui/x-data-grid"
 import type React from "react"
 import { IconCircuitCapacitor } from '@tabler/icons-react'
-import CustomTable from "../CustomTable"
+import CustomTable, { CustomTableProps } from "../CustomTable"
 import { useCallback } from "react"
 
 const columns: GridColDef[] = [
@@ -19,15 +19,7 @@ const columns: GridColDef[] = [
     { "field": "temp_coeff", headerName: "Temperature Coefficient", editable: true, type: "number" },
 ]
 
-const CapacitorTable: React.FC = () => {
-    const getData = useCallback(async () => {
-        return await fetch(`http://localhost:3000/component?type=capacitor`)
-            .then(res => res.json())
-            .then(json => {
-                return json.map((j, i) => ({ id: i, ...j }))
-            })
-    }, [])
-
+const CapacitorTable: React.FC<Pick<CustomTableProps, "getData">> = ({ getData }) => {
     const mutateRow = useCallback(async (row, oldRow) => {
         await fetch(`http://localhost:3000/component/${oldRow.part_num}`, { method: "PUT", body: JSON.stringify(row) });
         return row
@@ -43,6 +35,7 @@ const CapacitorTable: React.FC = () => {
                 getData={getData}
                 columns={columns}
                 mutateRow={mutateRow}
+                tableName="component"
             />
         </Stack>
     )

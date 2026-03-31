@@ -120,15 +120,17 @@ const DeleteConfirm: React.FC<DeleteConfirmProps> = ({ rowSelectionModel, tableN
             ids = [... rowSelectionModel.ids]
         }
 
-        await Promise.all(
+        const results = await Promise.all(
             ids.map((id: any) =>
                 fetch(`http://localhost:3000/${tableName}/${id}`, { method: "DELETE" })
-                .then(res => {
-                    console.log(`DELETE: $ {tableName}/{id} status:`, res.status)
-                    return res
-                })
+                .then(async res => ({ id, ok: res.ok, body: await res.json() }))
             )
         )
+
+        const failed = results.filter(r => !r.ok)
+        if (failed.length > 0) {
+            alert(failed.map(f => f.body.error).join('\n'))
+        }
 
         handleClose()
         onDeleteSuccess()
@@ -164,18 +166,24 @@ const DeleteConfirm: React.FC<DeleteConfirmProps> = ({ rowSelectionModel, tableN
     )
 }
 
-const CustomToolbar: React.FC<ToolbarProps> = ({ rowSelectionModel, setModalOpen, allowAdd }) => {
+const CustomToolbar: React.FC<ToolbarProps> = ({ rowSelectionModel, setModalOpen, allowAdd, tableName, onDeleteSuccess }) => {
     const grid = useGridApiContext()
+    const isSelected = rowSelectionModel?.ids.size > 0 || rowSelectionModel?.type === 'exclude'
     return (
         <Toolbar>
+            {isSelected && (
+                <DeleteConfirm 
+                    rowSelectionModel={rowSelectionModel} 
+                    tableName={tableName}
+                    onDeleteSuccess={onDeleteSuccess}
+                />
+            )}
             {allowAdd && (
                 <ToolbarButton onClick={() => setModalOpen(true)}>
                     <Add />
                 </ToolbarButton>
             )}
-            {rowSelectionModel?.ids.size > 0 && (
-                <DeleteConfirm rowSelectionModel={rowSelectionModel} />
-            )}
+            {/* <div style={{ flex: 1 }} /> */}
             <ColumnsPanelTrigger render={<ToolbarButton />}>
                 <GridViewColumnIcon fontSize="small" />
             </ColumnsPanelTrigger>
