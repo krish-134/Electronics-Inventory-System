@@ -2,7 +2,7 @@ import { Button, Card, CardContent, CardActions, Grid, Select, Stack, Typography
 import { useCallback, useState, useEffect, } from "react"
 import { type GridColDef } from "@mui/x-data-grid"
 import { Link } from "react-router"
-import CustomTable, { AddCardProps } from "../CustomTable"
+import CustomTable, { AddCardProps } from "../../shared/CustomTable"
 import { ErrorMessage } from "@hookform/error-message"
 import { useForm, Controller } from "react-hook-form"
 import { ErrorOutline, Store, LocalShipping } from "@mui/icons-material"
@@ -142,7 +142,7 @@ const PurchasesTable: React.FC = () => {
     const getData = useCallback(async () => {
         return await fetch(`${localHost}/shipping/purchase`)
             .then(res => res.json())
-            .then(json => json.map((j, i) => ({ id: i, ...j })))
+            .then(json => json.map((j, i) => ({ id: j.order_number ?? i, ...j })))
     }, [])
     
     const mutateRow = useCallback(async (row, oldRow) => {
@@ -161,6 +161,7 @@ const PurchasesTable: React.FC = () => {
                 columns={columns}
                 AddCard={AddCard}
                 mutateRow={mutateRow}
+                tableName="shipping/purchase"
             />
         </Stack>
     )

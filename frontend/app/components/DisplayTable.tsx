@@ -1,7 +1,7 @@
 import { DataGrid, GridColDef, GridRowModel, GridRowSelectionModel } from "@mui/x-data-grid"
 import type React from "react"
 import { useCallback, useEffect, useState } from "react"
-import CustomToolbar from "./data/CustomToolbar"
+import CustomToolbar from "../shared/CustomToolbar"
 import { formatString } from "../routes/locations"
 
 interface DisplayTableProps {

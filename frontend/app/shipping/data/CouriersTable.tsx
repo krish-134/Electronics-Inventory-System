@@ -2,7 +2,7 @@ import React from "react";
 import { Button, Card, CardContent, CardActions, Grid, Select, Stack, Typography, TextField, InputAdornment, FormControl, InputLabel, MenuItem } from "@mui/material"
 import { useCallback } from "react"
 import { type GridColDef } from "@mui/x-data-grid"
-import CustomTable, { AddCardProps } from "../CustomTable"
+import CustomTable, { AddCardProps } from "../../shared/CustomTable"
 import { ErrorMessage } from "@hookform/error-message"
 import { useForm, Controller } from "react-hook-form"
 import { ErrorOutline } from "@mui/icons-material"
@@ -78,7 +78,7 @@ const CouriersTable: React.FC = () => {
     const getData = useCallback(async () => {
         return await fetch(`${localHost}/shipping/courier`)
             .then(res => res.json())
-            .then(json => json.map((j, i) => ({ id: i, ...j })))
+            .then(json => json.map((j, i) => ({ id: j.name ?? i, ...j })))
     }, [])
 
 
@@ -102,6 +102,7 @@ const CouriersTable: React.FC = () => {
                 columns={columns}
                 AddCard={AddCard}
                 mutateRow={mutateRow}
+                tableName="shipping/courier"
             />
         </Stack>
     )
