@@ -8,9 +8,7 @@ export interface Component {
     quantity: number
     voltage_rating?: number
     additional?: object
-    storage_name?: string
-    position?: string
-    facility?: string
+    position?: number
     supplier_name: string
 }
 
