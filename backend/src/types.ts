@@ -1,3 +1,4 @@
+// duplicate of frontend types.ts
 export interface Component {
     part_num: string
     price?: number
@@ -33,15 +34,11 @@ export interface Diode {
 }
 
 export interface Location {
-    position_id: number
     storage_name: string
     position: string
     facility: string
-}
-
-export type LocatedItem = {
-    id: string
-    type: 'component' | 'project'
+    type?: string
+    last_updated?: string
 }
 
 export interface Courier {

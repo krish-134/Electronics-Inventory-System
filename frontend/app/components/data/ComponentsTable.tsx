@@ -2,7 +2,7 @@ import { Avatar, Button, Card, CardActions, CardContent, Divider, FormControl, G
 import { GridRenderEditCellParams, type GridColDef } from "@mui/x-data-grid"
 import type React from "react"
 import { IconCircuitCapacitor, IconCircuitDiode, IconCircuitResistor } from '@tabler/icons-react'
-import CustomTable, { AddCardProps } from "../CustomTable"
+import CustomTable, { AddCardProps, CustomTableProps } from "../CustomTable"
 import { Link } from "react-router"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Location, Supplier } from "../../types"
@@ -52,8 +52,13 @@ const columns: GridColDef[] = [
         )
     },
     {
-        "field": "storage_name", headerName: "Storage", editable: true, renderCell: (params) => (
-            <Link to={`/locations#${params.value}`}>
+        "field": "position", headerName: "Location", editable: false, width: 200,
+        valueGetter: (_value, row) => {
+            if (!row.facility) return 'Unplaced';
+            return `${row.facility} > ${row.storage_name} > ${row.position_name}`;
+        },
+        renderCell: (params) => (
+            <Link to={`/locations`}>
                 {params.formattedValue}
             </Link>
         )
@@ -116,7 +121,7 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
             vforward, vreverse, dcapacitance
         } = data;
 
-        let { storage_name, facility, position } = storage ? JSON.parse(storage) : {};
+        let position = storage ? JSON.parse(storage).position_id : null;
         let supplier_name = JSON.parse(supplier).name
 
         let additional_json = null;
@@ -135,8 +140,6 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
             quantity,
             voltage_rating: voltageRating,
             additional: additional_json,
-            storage_name,
-            facility,
             position,
             supplier_name,
             componentType,
@@ -222,12 +225,11 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
                                 <InputLabel id="storage-select-label">Storage</InputLabel>
                                 <Controller name="storage" control={control} rules={{ required: false }} render={({ field }) => (
                                     <Select {...field} label="Storage" labelId="storage-select-label" defaultValue="" startAdornment={<Inventory sx={{ color: "divider" }} fontSize="small" />}>
-                                        {storageOptions.map(opt => {
-                                            const id = `${opt.facility}-${opt.storage_name}-${opt.position}`
-                                            return (
-                                                <MenuItem key={id} value={JSON.stringify(opt)}>{opt.label ?? id}</MenuItem>
-                                            )
-                                        })}
+                                        {storageOptions.filter(opt => opt.position).map(opt => (
+                                            <MenuItem key={opt.position_id} value={JSON.stringify(opt)}>
+                                                {opt.facility} &gt; {opt.storage_name} &gt; {opt.position}
+                                            </MenuItem>
+                                        ))}
                                     </Select>
                                 )} />
                             </FormControl>
@@ -292,15 +294,7 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
     )
 }
 
-const ComponentsTable: React.FC = () => {
-    const getData = useCallback(async () => {
-        return await fetch(`http://localhost:3000/component`)
-            .then(res => res.json())
-            .then(json => {
-                return json.map((j, i) => ({ id: i, ...j }))
-            })
-    }, [])
-
+const ComponentsTable: React.FC<Pick<CustomTableProps, "getData">> = ({ getData }) => {
     const mutateRow = useCallback(async (row, oldRow) => {
         await fetch(`http://localhost:3000/component/${oldRow.part_num}`, { method: "PUT", body: JSON.stringify(row) });
         return row

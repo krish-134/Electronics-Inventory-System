@@ -7,16 +7,20 @@ app.get('/', async c => {
     const { type } = c.req.query();
 
     const res = await sql`SELECT * FROM (
-        SELECT component.part_num, *,
+        SELECT component.*,
+        p.name AS position_name, s.name AS storage_name, f.name AS facility,
         CASE
-            WHEN capacitor.part_num = component.part_num THEN 'capacitor'
-            WHEN resistor.part_num = component.part_num THEN 'resistor'
-            WHEN diode.part_num = component.part_num THEN 'diode'
+            WHEN capacitor.part_num IS NOT NULL THEN 'capacitor'
+            WHEN resistor.part_num IS NOT NULL THEN 'resistor'
+            WHEN diode.part_num IS NOT NULL THEN 'diode'
             ELSE NULL END AS component_type
     FROM component
     LEFT JOIN capacitor USING (part_num)
     LEFT JOIN resistor USING (part_num)
-    LEFT JOIN diode USING (part_num))
+    LEFT JOIN diode USING (part_num)
+    LEFT JOIN position p ON component.position = p.id
+    LEFT JOIN storage s ON p.storage = s.id
+    LEFT JOIN facility f ON s.facility = f.id) sub
     WHERE (${type ?? null}::text IS NULL OR component_type = ${type ?? null});`
 
     return c.json(res);
@@ -35,9 +39,7 @@ app.post('/:component_type', async c => {
         quantity,
         voltage_rating,
         additional,
-        storage_name,
         position,
-        facility,
         supplier_name
     } = body;
 
@@ -51,9 +53,7 @@ INSERT INTO component (
     quantity,
     voltage_rating,
     additional,
-    storage_name,
     position,
-    facility,
     supplier_name
     ) VALUES (
     ${part_num},
@@ -64,9 +64,7 @@ INSERT INTO component (
     ${quantity ?? null},
     ${voltage_rating ?? null},
     ${additional ?? null},
-    ${storage_name ?? null},
     ${position ?? null},
-    ${facility ?? null},
     ${supplier_name}
     );`
 
@@ -109,9 +107,7 @@ app.put('/:part_num', async c => {
         quantity,
         voltage_rating,
         additional,
-        storage_name,
         position,
-        facility,
         supplier_name
     } = body;
 
@@ -125,9 +121,7 @@ UPDATE component SET
     quantity = ${quantity ?? null},
     voltage_rating = ${voltage_rating ?? null},
     additional = ${additional ?? null},
-    storage_name = ${storage_name ?? null},
     position = ${position ?? null},
-    facility = ${facility ?? null},
     supplier_name = ${supplier_name ?? null}
 WHERE part_num = ${part_num};`
 
@@ -157,6 +151,21 @@ app.delete("/:part_num", async (c) => {
     `;
 
     return c.json(part_num, 200)
+})
+
+app.put("/:part_num/move", async c => {
+    const { part_num } = c.req.param();
+    const body = await c.req.json();
+
+    const {
+        position
+    } = body
+
+    if (position === undefined) return c.status(200)
+
+    const res = await sql`UPDATE component SET position=${position} WHERE part_num=${part_num};`
+
+    return c.json(res, 200)
 })
 
 export default app
