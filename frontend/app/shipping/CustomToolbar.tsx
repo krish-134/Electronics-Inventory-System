@@ -78,7 +78,7 @@ declare module '@mui/x-data-grid' {
         rowSelectionModel: GridRowSelectionModel
         setModalOpen: React.Dispatch<React.SetStateAction<boolean>>
         allowAdd: boolean
-        tableName: string
+        onDelete?: (ids: any[]) => Promise<void>
         onDeleteSuccess: () => void
     }
 }
@@ -87,17 +87,17 @@ interface ToolbarProps {
     rowSelectionModel: GridRowSelectionModel
     setModalOpen: React.Dispatch<React.SetStateAction<boolean>>
     allowAdd: boolean
-    tableName: string
+        onDelete?: (ids: any[]) => Promise<void>
     onDeleteSuccess: () => void
 }
 
 interface DeleteConfirmProps {
     rowSelectionModel: GridRowSelectionModel
-    tableName: string
+    onDelete?: (ids: any[]) => Promise<void>
     onDeleteSuccess: () => void
 }
 
-const DeleteConfirm: React.FC<DeleteConfirmProps> = ({ rowSelectionModel, tableName, onDeleteSuccess }) => {
+const DeleteConfirm: React.FC<DeleteConfirmProps> = ({ rowSelectionModel, onDelete, onDeleteSuccess }) => {
     const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -120,17 +120,19 @@ const DeleteConfirm: React.FC<DeleteConfirmProps> = ({ rowSelectionModel, tableN
             ids = [... rowSelectionModel.ids]
         }
 
-        const results = await Promise.all(
-            ids.map((id: any) =>
-                fetch(`http://localhost:3000/${tableName}/${id}`, { method: "DELETE" })
-                .then(async res => ({ id, ok: res.ok, body: await res.json() }))
-            )
-        )
+        // const results = await Promise.all(
+        //     ids.map((id: any) =>
+        //         fetch(`http://localhost:3000/${tableName}/${id}`, { method: "DELETE" })
+        //         .then(async res => ({ id, ok: res.ok, body: await res.json() }))
+        //     )
+        // )
 
-        const failed = results.filter(r => !r.ok)
-        if (failed.length > 0) {
-            alert(failed.map(f => f.body.error).join('\n'))
-        }
+        // const failed = results.filter(r => !r.ok)
+        // if (failed.length > 0) {
+        //     alert(failed.map(f => f.body.error).join('\n'))
+        // }
+
+        await onDelete?.(ids)
 
         handleClose()
         onDeleteSuccess()
@@ -166,15 +168,15 @@ const DeleteConfirm: React.FC<DeleteConfirmProps> = ({ rowSelectionModel, tableN
     )
 }
 
-const CustomToolbar: React.FC<ToolbarProps> = ({ rowSelectionModel, setModalOpen, allowAdd, tableName, onDeleteSuccess }) => {
+const CustomToolbar: React.FC<ToolbarProps> = ({ rowSelectionModel, setModalOpen, allowAdd, onDelete, onDeleteSuccess }) => {
     const grid = useGridApiContext()
-    const isSelected = rowSelectionModel?.ids.size > 0 || rowSelectionModel?.type === 'exclude'
+    const isSelected = (rowSelectionModel?.ids.size > 0 || rowSelectionModel?.type === 'exclude') && !!onDelete
     return (
         <Toolbar>
             {isSelected && (
                 <DeleteConfirm 
                     rowSelectionModel={rowSelectionModel} 
-                    tableName={tableName}
+                    onDelete={onDelete}
                     onDeleteSuccess={onDeleteSuccess}
                 />
             )}

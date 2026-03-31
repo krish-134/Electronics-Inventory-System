@@ -13,7 +13,7 @@ export interface CustomTableProps {
     columns: GridColDef[]
     AddCard?: React.FC<AddCardProps>
     mutateRow: (row: any, oldRow: any) => any // TODO: figure out types
-    tableName?: string
+    handleDelete?: (ids: any[]) => Promise<void>
 }
 
 export interface AddCardProps {
@@ -22,7 +22,7 @@ export interface AddCardProps {
     handleAdd: (r: Rows) => void
 }
 
-const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns, AddCard, mutateRow, tableName }) => {
+const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns, AddCard, mutateRow, handleDelete }) => {
     const [rows, setRows] = useState<Rows | undefined>([])
     const [rowSelectionModel, setRowSelectionModel] = useState<GridRowSelectionModel>()
     const [modalOpen, setModalOpen] = useState(false)
@@ -108,7 +108,7 @@ const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns, AddC
                         rowSelectionModel,
                         setModalOpen,
                         allowAdd: !!AddCard,
-                        tableName,
+                        onDelete: handleDelete,
                         onDeleteSuccess: () => getData().then(setRows)
                     },
                 }}
