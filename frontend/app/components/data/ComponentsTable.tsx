@@ -2,7 +2,7 @@ import { Avatar, Button, Card, CardActions, CardContent, Divider, FormControl, G
 import { GridRenderEditCellParams, type GridColDef } from "@mui/x-data-grid"
 import type React from "react"
 import { IconCircuitCapacitor, IconCircuitDiode, IconCircuitResistor } from '@tabler/icons-react'
-import CustomTable, { AddCardProps } from "../CustomTable"
+import CustomTable, { AddCardProps, CustomTableProps } from "../CustomTable"
 import { Link } from "react-router"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Location, Supplier } from "../../types"
@@ -133,6 +133,7 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
         }
         fetch(`http://localhost:3000/component/${componentType}`, {
             method: 'POST',
+            headers: { 'Content-Type': 'applications/json' },
             body: JSON.stringify(newRow)
         }).then(res => {
             if (Math.floor(res.status / 100) == 2) {
@@ -279,15 +280,7 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
     )
 }
 
-const ComponentsTable: React.FC = () => {
-    const getData = useCallback(async () => {
-        return await fetch(`http://localhost:3000/component`)
-            .then(res => res.json())
-            .then(json => {
-                return json.map((j, i) => ({ id: i, ...j }))
-            })
-    }, [])
-
+const ComponentsTable: React.FC<Pick<CustomTableProps, "getData">> = ({ getData }) => {
     const mutateRow = useCallback(async (row, oldRow) => {
         await fetch(`http://localhost:3000/component/${oldRow.part_num}`, { method: "PUT", body: JSON.stringify(row) });
         return row
@@ -304,6 +297,7 @@ const ComponentsTable: React.FC = () => {
                 columns={columns}
                 AddCard={AddCard}
                 mutateRow={mutateRow}
+                tableName="component"
             />
         </Stack>
     )
