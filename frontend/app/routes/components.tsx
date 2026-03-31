@@ -14,7 +14,7 @@ const Components: React.FC = () => {
         fetch(`http://localhost:3000/component`)
             .then(res => res.json())
             .then(json => {
-                setData(json.map((j, i) => ({ id: i, ...j })))
+                setData(json.map((j, i) => ({ id: j.part_num ?? i, ...j })))
             })
     }, [])
 
