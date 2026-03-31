@@ -157,8 +157,7 @@ app.delete("/:part_num", async (c) => {
         }
         return c.json({ error: e.message }, 500 )
     }
-    
-    // return c.json(part_num, 200)
+
 })
 
 app.put("/:part_num/move", async c => {

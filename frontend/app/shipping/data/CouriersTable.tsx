@@ -2,7 +2,7 @@ import React from "react";
 import { Button, Card, CardContent, CardActions, Grid, Select, Stack, Typography, TextField, InputAdornment, FormControl, InputLabel, MenuItem } from "@mui/material"
 import { useCallback } from "react"
 import { type GridColDef } from "@mui/x-data-grid"
-import CustomTable, { AddCardProps } from "../../shared/CustomTable"
+import CustomTable, { AddCardProps } from "../CustomTable"
 import { ErrorMessage } from "@hookform/error-message"
 import { useForm, Controller } from "react-hook-form"
 import { ErrorOutline } from "@mui/icons-material"

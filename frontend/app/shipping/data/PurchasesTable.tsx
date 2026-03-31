@@ -2,7 +2,7 @@ import { Button, Card, CardContent, CardActions, Grid, Select, Stack, Typography
 import { useCallback, useState, useEffect, } from "react"
 import { type GridColDef } from "@mui/x-data-grid"
 import { Link } from "react-router"
-import CustomTable, { AddCardProps } from "../../shared/CustomTable"
+import CustomTable, { AddCardProps } from "../CustomTable"
 import { ErrorMessage } from "@hookform/error-message"
 import { useForm, Controller } from "react-hook-form"
 import { ErrorOutline, Store, LocalShipping } from "@mui/icons-material"

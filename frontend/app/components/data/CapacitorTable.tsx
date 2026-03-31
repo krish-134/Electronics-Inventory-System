@@ -2,7 +2,7 @@ import { Avatar, Stack, Typography } from "@mui/material"
 import { type GridColDef } from "@mui/x-data-grid"
 import type React from "react"
 import { IconCircuitCapacitor } from '@tabler/icons-react'
-import CustomTable, { CustomTableProps } from "../../shared/CustomTable"
+import CustomTable, { CustomTableProps } from "../CustomTable"
 import { useCallback } from "react"
 
 const columns: GridColDef[] = [
@@ -25,6 +25,21 @@ const CapacitorTable: React.FC<Pick<CustomTableProps, "getData">> = ({ getData }
         return row
     }, [])
 
+    
+    const handleDelete = async (ids: string[]) => {
+        const results = await Promise.all(
+            ids.map((id: any) =>
+                fetch(`http://localhost:3000/component/${id}`, { method: "DELETE" })
+                .then(async res => ({ id, ok: res.ok, body: await res.json() }))
+            )
+        )
+
+        const failed = results.filter(r => !r.ok)
+        if (failed.length > 0) {
+            alert(failed.map(f => f.body.error).join('\n'))
+        }
+    }
+
     return (
         <Stack direction="column">
             <Typography component="h2" variant="h6">
@@ -35,7 +50,7 @@ const CapacitorTable: React.FC<Pick<CustomTableProps, "getData">> = ({ getData }
                 getData={getData}
                 columns={columns}
                 mutateRow={mutateRow}
-                tableName="component"
+                handleDelete={handleDelete}
             />
         </Stack>
     )
