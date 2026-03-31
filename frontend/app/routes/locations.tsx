@@ -1,4 +1,5 @@
 import type React from "react"
+import Locations from "../components/data/Locations"
 import { useEffect, useState } from "react"
 import { alpha, Theme, useTheme } from '@mui/material/styles';
 import OutlinedInput from '@mui/material/OutlinedInput';
@@ -35,9 +36,6 @@ const columns = [
     'storage_name',
     'position',
     'facility',
-    'type',
-    'label',
-    'last_updated'
 ];
 
 const operators = [
@@ -72,8 +70,8 @@ function getStyles(name: string, personName: string[], theme: Theme) {
 function SlideTransition(props: any) {
     return <Slide {...props} direction="down" />;
 }
-
-const Locations: React.FC = () => {
+        
+const LocationsPage: React.FC = () => {
     const theme = useTheme();
     const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
     const [selectedOperator, setSelectedOperator] = useState<string>("");
@@ -132,17 +130,14 @@ const Locations: React.FC = () => {
     return (
         <div className="flex flex-col my-3 space-y-6 pt-9 w-full">
             <Toast open={toastOpen} setOpen={setToastOpen} text={errorText} style={ToastStyle.ERROR} />
+            <Locations />
 
-            <p>
-                Use this page to find the locations of your components, as well as extra details about it and its placement.
-            </p>
-
-            <Divider sx={{ mb: 3 }}/>
+            <Divider sx={{ my: 3 }}/>
 
             <p>
                 Find the location of my components where
             </p>
-            
+
             <div>
                 <FormControl>
                     <InputLabel id="demo-simple-select-label">Attribute</InputLabel>
@@ -155,10 +150,10 @@ const Locations: React.FC = () => {
                         sx={{ width: 200, mr: 2 }}
                         error={invalidFields[0]}
                     >
-                        {attributes.map(atr => <MenuItem value={atr}>{formatString(atr)}</MenuItem>)}
+                        {attributes.map(atr => <MenuItem key={atr} value={atr}>{formatString(atr)}</MenuItem>)}
                     </Select>
                 </FormControl>
-                
+
                 <FormControl >
                     <InputLabel id="demo-simple-select-label">Operator</InputLabel>
                     <Select
@@ -170,17 +165,17 @@ const Locations: React.FC = () => {
                         sx={{ width: 115, mr: 2 }}
                         error={invalidFields[1]}
                     >
-                        {operators.map(op => <MenuItem value={op.value}>{op.display}</MenuItem>)}
+                        {operators.map(op => <MenuItem key={op.value} value={op.value}>{op.display}</MenuItem>)}
                     </Select>
                 </FormControl>
 
-                <FormControl> 
-                    <TextField 
-                        id="outlined-basic" 
-                        label="Value" 
-                        variant="outlined" 
-                        type="number" 
-                        onChange={e => setQueriedValue(e.target.value as any)} 
+                <FormControl>
+                    <TextField
+                        id="outlined-basic"
+                        label="Value"
+                        variant="outlined"
+                        type="number"
+                        onChange={e => setQueriedValue(e.target.value as any)}
                         value={queriedValue}
                         sx={{ width: 200, mt: {xs: 2, sm: 0} }}
                     />
@@ -221,7 +216,7 @@ const Locations: React.FC = () => {
                 ))}
                 </Select>
             </FormControl>
-            
+
             <Button onClick={request} sx={{ justifySelf: "left", width: 200, border: 1, mb: 1}}>Find my parts!</Button>
 
             {returned.length > 0 &&
@@ -231,5 +226,4 @@ const Locations: React.FC = () => {
     )
 }
 
-
-export default Locations
+export default LocationsPage
