@@ -83,6 +83,20 @@ const SuppliersTable: React.FC = () => {
         await fetch(`${localHost}/shipping/supplier/${oldRow.name}`)
         return row
     }, [])
+    
+    const handleDelete = async (ids: string[]) => {
+        const results = await Promise.all(
+            ids.map((id: any) =>
+                fetch(`http://localhost:3000/shipping/supplier/${id}`, { method: "DELETE" })
+                .then(async res => ({ id, ok: res.ok, body: await res.json() }))
+            )
+        )
+
+        const failed = results.filter(r => !r.ok)
+        if (failed.length > 0) {
+            alert(failed.map(f => f.body.error).join('\n'))
+        }
+    }
 
     return (
         <Stack direction="column" sx={{ width: '100%' }}>
@@ -95,7 +109,7 @@ const SuppliersTable: React.FC = () => {
                 columns={columns}
                 AddCard={AddCard}
                 mutateRow={mutateRow}
-                tableName="shipping/supplier"
+                handleDelete={handleDelete}
             />
         </Stack>
     )
