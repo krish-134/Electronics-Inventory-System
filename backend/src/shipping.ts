@@ -132,15 +132,19 @@ app.get('/purchase', async c => {
     if (budget) {
         const parsed = parseFloat(budget)
         return c.json(await sql`
-        SELECT p1.order_number, SUM(component.price * component.quantity) AS price
-        FROM component
-        FULL JOIN purchaseincludes p1 ON component.part_num = p1.part_num
-        GROUP BY p1.order_number
-        HAVING SUM(component.price * component.quantity) < ${parsed}
-            AND 1 <= (
-                SELECT COUNT(*) FROM purchaseincludes p2
-                WHERE p2.order_number = p1.order_number
-                )
+            SELECT pur.*, sub.component_total
+            FROM purchase pur
+            JOIN (
+                SELECT p1.order_number, SUM(component.price * component.quantity) AS component_total
+                FROM component
+                JOIN purchaseincludes p1 ON component.part_num = p1.part_num
+                GROUP BY p1.order_number
+                HAVING SUM(component.price * component.quantity) < ${parsed}
+                    AND 1 <= (
+                        SELECT COUNT(*) FROM purchaseincludes p2
+                        WHERE p2.order_number = p1.order_number
+                    )
+            ) sub ON pur.order_number = sub.order_number
         `)
     }
 
