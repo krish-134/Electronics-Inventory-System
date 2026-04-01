@@ -139,11 +139,17 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
 
 
 const PurchasesTable: React.FC = () => {
+    const [budget, setBudget] = useState<string>("")
+    const [filterBudget, setFilterBudget] = useState<number | null>(null)
+
     const getData = useCallback(async () => {
-        return await fetch(`${localHost}/shipping/purchase`)
+        const url = filterBudget !== null
+            ? `${localHost}/shipping/purchase?budget=${filterBudget}`
+            : `${localHost}/shipping/purchase`
+        return await fetch(url)
             .then(res => res.json())
             .then(json => json.map((j, i) => ({ id: j.order_number ?? i, ...j })))
-    }, [])
+    }, [filterBudget])
     
     const mutateRow = useCallback(async (row, oldRow) => {
         await fetch(`${localHost}/shipping/purchase/${oldRow.order_num}`)
@@ -164,11 +170,44 @@ const PurchasesTable: React.FC = () => {
         }
     }
 
+    const handleFilter = () => {
+        const parsed = parseFloat(budget)
+        setFilterBudget(isNaN(parsed) ? null : parsed)
+    }
+
+    const handleClear = () => {
+        setBudget("")
+        setFilterBudget(null)
+    }
+
     return (
         <Stack direction="column" sx={{ width: '100%' }}>
             <Typography component="h2" variant="h6">
                 Purchases
             </Typography>
+            <Stack direction="row" gap={1} alignItems="center" sx={{ mb: 1 }}>
+                <TextField
+                    label="Max Budget"
+                    value={budget}
+                    onChange={e => setBudget(e.target.value)}
+                    size="small"
+                    type="number"
+                    slotProps={{ input: { startAdornment: <InputAdornment position="start">$</InputAdornment> } }}
+                />
+                <Button variant="outlined" size="small" onClick={handleFilter}>
+                    Filter
+                </Button>
+                {filterBudget !== null && (
+                    <Button variant="outlined" size="small" color="warning" onClick={handleClear}>
+                        Clear
+                    </Button>
+                )}
+                {filterBudget !== null && (
+                    <Typography variant="body2" color="text.secondary">
+                        Showing purchases under ${filterBudget}
+                    </Typography>
+                )}
+            </Stack>
             <CustomTable
                 label="Purchases"
                 getData={getData}
