@@ -10,25 +10,6 @@ import { Supplier, Courier } from "../../types"
 
 const localHost = `http://localhost:3000`
 
-const columns: GridColDef[] = [
-    { field: "order_number",  headerName: "Order #",       editable: true, flex: 0.5 },
-    { field: "price",         headerName: "Price",         editable: true, flex: 0.5 },
-    { field: "tracking_code", headerName: "Tracking Code", editable: true, flex: 0.5 },
-    { field: "date_placed",   headerName: "Date Placed",   editable: true, flex: 1 },
-    { field: "delivery_date", headerName: "Delivery Date", editable: true, flex: 1 },   
-    {  
-        field: "supplier", headerName: "Supplier", editable: true,
-        renderCell: (params) => (
-            <Link to={`/shipping#supplier-${params.value}`}>{params.formattedValue}</Link>
-        )
-    },
-    {
-        field: "courier", headerName: "Courier", editable: true, flex: 1,
-        renderCell: (params) => (
-            <Link to={`/shipping#courier-${params.value}`}>{params.formattedValue}</Link>
-        )
-    },
-]
 
 const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => {
     const [supplierOptions, setSupplierOptions] = useState<Supplier[]>([])
@@ -142,6 +123,30 @@ const PurchasesTable: React.FC = () => {
     const [budget, setBudget] = useState<string>("")
     const [filterBudget, setFilterBudget] = useState<number | null>(null)
 
+
+    
+    const columns: GridColDef[] = [
+        
+        ...(filterBudget ? [{ field: "component_total", headerName: "Component Cost", flex: 0.6 }]: []),
+        { field: "order_number",  headerName: "Order #",       editable: true, flex: 0.5 },
+        { field: "price",         headerName: "Price",         editable: true, flex: 0.5 },
+        { field: "tracking_code", headerName: "Tracking Code", editable: true, flex: 0.6 },
+        { field: "date_placed",   headerName: "Date Placed",   editable: true, flex: 1 },
+        { field: "delivery_date", headerName: "Delivery Date", editable: true, flex: 1 },   
+        {  
+            field: "supplier", headerName: "Supplier", editable: true,
+            renderCell: (params) => (
+                <Link to={`/shipping#supplier-${params.value}`}>{params.formattedValue}</Link>
+            )
+        },
+        {
+            field: "courier", headerName: "Courier", editable: true, flex: 1,
+            renderCell: (params) => (
+                <Link to={`/shipping#courier-${params.value}`}>{params.formattedValue}</Link>
+            )
+        },
+    ]
+
     const getData = useCallback(async () => {
         const url = filterBudget !== null
             ? `${localHost}/shipping/purchase?budget=${filterBudget}`
@@ -182,32 +187,38 @@ const PurchasesTable: React.FC = () => {
 
     return (
         <Stack direction="column" sx={{ width: '100%' }}>
-            <Typography component="h2" variant="h6">
-                Purchases
-            </Typography>
-            <Stack direction="row" gap={1} alignItems="center" sx={{ mb: 1 }}>
-                <TextField
-                    label="Max Budget"
-                    value={budget}
-                    onChange={e => setBudget(e.target.value)}
-                    size="small"
-                    type="number"
-                    slotProps={{ input: { startAdornment: <InputAdornment position="start">$</InputAdornment> } }}
-                />
-                <Button variant="outlined" size="small" onClick={handleFilter}>
-                    Filter
-                </Button>
-                {filterBudget !== null && (
-                    <Button variant="outlined" size="small" color="warning" onClick={handleClear}>
-                        Clear
+            <Stack direction="row" justifyContent="space-between">
+
+                <Typography component="h2" variant="h6">
+                    Purchases
+                </Typography>
+
+                <Stack direction="row" gap={1}  alignItems="center" sx={{ mb: 1 }}>
+                    
+                    {filterBudget !== null && (
+                        <Typography variant="body2" color="text.secondary">
+                            Showing purchases with component cost under ${filterBudget}
+                        </Typography>
+                    )}
+                    {filterBudget !== null && (
+                        <Button variant="outlined" size="small" color="warning" onClick={handleClear}>
+                            Clear
+                        </Button>
+                    )}
+                    <Button variant="outlined" size="small" onClick={handleFilter}>
+                        Filter
                     </Button>
-                )}
-                {filterBudget !== null && (
-                    <Typography variant="body2" color="text.secondary">
-                        Showing purchases under ${filterBudget}
-                    </Typography>
-                )}
+                    <TextField
+                        label="Budget (component cost)"
+                        value={budget}
+                        onChange={e => setBudget(e.target.value)}
+                        size="small"
+                        type="number"
+                        slotProps={{ input: { startAdornment: <InputAdornment position="start">$</InputAdornment> } }}
+                    />
+                </Stack>
             </Stack>
+            
             <CustomTable
                 label="Purchases"
                 getData={getData}
