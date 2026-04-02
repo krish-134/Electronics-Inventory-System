@@ -2,7 +2,7 @@ import { DataGrid, GridColDef, GridRowModel, GridRowSelectionModel } from "@mui/
 import type React from "react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useLocation } from "react-router"
-import CustomToolbar from "./data/CustomToolbar"
+import CustomToolbar from "./CustomToolbar"
 import { GlobalStyles, Modal, Stack } from "@mui/material"
 
 type Rows = readonly any[]
@@ -31,7 +31,7 @@ const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns, AddC
 
     useEffect(() => {
         getData().then(setRows)
-    }, [])
+    }, [getData])
 
     useEffect(() => {
         if (!location.hash || !rows?.length || hasScrolled.current) return;

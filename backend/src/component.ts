@@ -9,6 +9,9 @@ app.get('/', async c => {
     const res = await sql`SELECT * FROM (
         SELECT component.*,
         p.name AS position_name, s.name AS storage_name, f.name AS facility,
+        resistor.resistance, resistor.power, resistor.composition,
+        capacitor.capacitance, capacitor.type, capacitor.temp_coeff,
+        diode.vforward, diode.vreverse, diode.dcapacitance,
         CASE
             WHEN capacitor.part_num IS NOT NULL THEN 'capacitor'
             WHEN resistor.part_num IS NOT NULL THEN 'resistor'
@@ -125,18 +128,43 @@ UPDATE component SET
     supplier_name = ${supplier_name ?? null}
 WHERE part_num = ${part_num};`
 
-    const { power, resistance, composition } = body
-    await sql`
-UPDATE resistor SET power=${power ?? null}, resistance=${resistance}, composition=${composition ?? null} WHERE part_num=${new_part_num};
-`
-    const { type: res_type, capacitance, temp_coeff } = body
-    await sql`
-UPDATE capacitor SET type=${res_type ?? null}, temp_coeff=${temp_coeff ?? null}, capacitance=${capacitance} WHERE part_num=${new_part_num};
-`
-    const { vforward, vreverse, capacitance: diode_capacitance } = body
-    await sql`
-UPDATE diode SET vforward=${vforward}, vreverse=${vreverse}, dcapacitance=${diode_capacitance ?? null} WHERE part_num=${new_part_num};
-`
+
+
+
+    // const { power, resistance, composition } = body
+    // await sql`
+    // UPDATE resistor SET power=${power ?? null}, resistance=${resistance}, composition=${composition ?? null} WHERE part_num=${new_part_num};
+    // `
+
+    // const { type: res_type, capacitance, temp_coeff } = body
+    // await sql`
+    // UPDATE capacitor SET type=${res_type ?? null}, temp_coeff=${temp_coeff ?? null}, capacitance=${capacitance} WHERE part_num=${new_part_num};
+    // `
+
+    // const { vforward, vreverse, capacitance: diode_capacitance } = body
+    // await sql`
+    // UPDATE diode SET vforward=${vforward}, vreverse=${vreverse}, dcapacitance=${diode_capacitance ?? null} WHERE part_num=${new_part_num};
+    // `
+
+    const component_type = body
+    switch (component_type) {
+        case "resistor":
+            const { power, resistance, composition } = body
+            await sql`
+        UPDATE resistor SET power=${power ?? null}, resistance=${resistance}, composition=${composition ?? null} WHERE part_num=${new_part_num};
+        `
+        case "capacitor":
+            const { type: res_type, capacitance, temp_coeff } = body
+            await sql`
+            UPDATE capacitor SET type=${res_type ?? null}, temp_coeff=${temp_coeff ?? null}, capacitance=${capacitance} WHERE part_num=${new_part_num};
+            `
+        case "diode":
+            const { vforward, vreverse, capacitance: diode_capacitance } = body
+            await sql`
+            UPDATE diode SET vforward=${vforward}, vreverse=${vreverse}, dcapacitance=${diode_capacitance ?? null} WHERE part_num=${new_part_num};
+            `
+    }    
+    
 
     return c.json(part_num, 200)
 })
@@ -144,13 +172,20 @@ UPDATE diode SET vforward=${vforward}, vreverse=${vreverse}, dcapacitance=${diod
 app.delete("/:part_num", async (c) => {
     const { part_num } = c.req.param();
 
-    await sql`
-        DELETE 
-        FROM component
-        WHERE part_num = ${part_num}
-    `;
+    try {
+        await sql`
+            DELETE 
+            FROM component
+            WHERE part_num = ${part_num}
+        `;
+        return c.json(part_num, 200)
+    } catch (e: any) {
+        if (e.code === '23503') {
+            return c.json({ error: `Cannot delete ${part_num} - it is still referenced by a purchase order` }, 409)
+        }
+        return c.json({ error: e.message }, 500 )
+    }
 
-    return c.json(part_num, 200)
 })
 
 app.put("/:part_num/move", async c => {
