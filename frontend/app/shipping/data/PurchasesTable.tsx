@@ -7,6 +7,7 @@ import { ErrorMessage } from "@hookform/error-message"
 import { useForm, Controller } from "react-hook-form"
 import { ErrorOutline, Store, LocalShipping, Clear } from "@mui/icons-material"
 import { Supplier, Courier } from "../../types"
+import Toast, { ToastInput, ToastStyle } from "../../components/Toast"
 
 const localHost = `http://localhost:3000`
 
@@ -140,6 +141,9 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
 
 
 const PurchasesTable: React.FC = () => {
+    const [toastContent, setToastContent] = useState<ToastInput>();
+    const [toastOpen, setToastOpen] = useState<boolean>(false);
+
     const [budget, setBudget] = useState<string>("")
     const [filterBudget, setFilterBudget] = useState<number | null>(null)
 
@@ -171,7 +175,8 @@ const PurchasesTable: React.FC = () => {
 
         const failed = results.filter(r => !r.ok)
         if (failed.length > 0) {
-            alert(failed.map(f => f.body.error).join('\n'))
+            setToastContent({display:failed.map(f => f.body.error).join('\n'), level: ToastStyle.ERROR});
+            setToastOpen(true);
         }
     }
 
@@ -187,6 +192,7 @@ const PurchasesTable: React.FC = () => {
 
     return (
         <Stack direction="column" sx={{ width: '100%' }}>
+            <Toast open={toastOpen} setOpen={setToastOpen} content={toastContent} />
             <Stack direction="row" justifyContent="space-between" alignItems="center">
 
                 <Typography component="h2" variant="h6">

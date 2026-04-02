@@ -143,6 +143,7 @@ const Components: React.FC = () => {
                     const filtered = {};
                     console.log(Object.keys(obj))
                     for (const [key, value] of Object.entries(obj)) {
+                        // @ts-expect-error typescript is simualtaneously the best and worst creation ever
                         if (columns.includes(key)) filtered[key] = value;
                     }
                     return filtered;

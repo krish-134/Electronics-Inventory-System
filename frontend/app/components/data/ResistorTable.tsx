@@ -3,7 +3,8 @@ import { type GridColDef } from "@mui/x-data-grid"
 import type React from "react"
 import { IconCircuitResistor } from '@tabler/icons-react'
 import CustomTable, { CustomTableProps } from "../CustomTable"
-import { useCallback } from "react"
+import { useCallback, useState } from "react"
+import Toast, { ToastInput, ToastStyle } from "../Toast"
 
 const columns: GridColDef[] = [
     {
@@ -20,6 +21,9 @@ const columns: GridColDef[] = [
 ]
 
 const ResistorTable: React.FC<Pick<CustomTableProps, "getData">> = ({ getData }) => {
+    const [toastContent, setToastContent] = useState<ToastInput>();
+    const [toastOpen, setToastOpen] = useState<boolean>(false);
+
     const mutateRow = useCallback(async (row, oldRow) => {
         await fetch(`http://localhost:3000/component/${oldRow.part_num}`, { method: "PUT", body: JSON.stringify(row) });
         return row
@@ -36,12 +40,14 @@ const ResistorTable: React.FC<Pick<CustomTableProps, "getData">> = ({ getData })
 
         const failed = results.filter(r => !r.ok)
         if (failed.length > 0) {
-            alert(failed.map(f => f.body.error).join('\n'))
+            setToastContent({display:failed.map(f => f.body.error).join('\n'), level: ToastStyle.ERROR});
+            setToastOpen(true);
         }
     }
 
     return (
         <Stack direction="column">
+            <Toast open={toastOpen} setOpen={setToastOpen} content={toastContent} />
             <Typography component="h2" variant="h6">
                 Resistors
             </Typography>

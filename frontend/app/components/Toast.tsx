@@ -6,7 +6,7 @@ function SlideTransition(props: any) {
 
 export enum ToastStyle {
 	ERROR,
-	WARNING,
+	// WARNING,
 	SUCCESS
 }
 
@@ -14,27 +14,27 @@ const Styles: ReadonlyMap<number, object> = new Map([
   [ToastStyle.ERROR, {
 		content: {
 			sx: {
-				bgcolor: alpha('#ef5350', 0.5),
+				bgcolor: '#B71C1C',
 				backgroundImage: 'none',
-				color: '#ef5350'
+				color: '#FF8A80'
 			}
 		}
 	}],
-  [ToastStyle.WARNING, {
-		content: {
-			sx: {
-				bgcolor: alpha('#ffef62', 0.5),
-				backgroundImage: 'none',
-				color: '#ffef62'
-			}
-		}
-	}], 
+//   [ToastStyle.WARNING, {
+// 		content: {
+// 			sx: {
+// 				bgcolor: alpha('#ffef62', 0.5),
+// 				backgroundImage: 'none',
+// 				color: '#ffef62'
+// 			}
+// 		}
+// 	}], 
   [ToastStyle.SUCCESS, {
 		content: {
 			sx: {
-				bgcolor: alpha('#4caf50', 0.5),
+				bgcolor: '#9FE2BF',
 				backgroundImage: 'none',
-				color: '#00ff00'
+				color: '#023020'
 			}
 		}
 	}],
