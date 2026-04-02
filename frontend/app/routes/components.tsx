@@ -139,7 +139,14 @@ const Components: React.FC = () => {
             <Button onClick={request} sx={{ justifySelf: "left", width: 200, border: 1, mb: -1.5}}>Find my parts!</Button>
 
             {selectionReturned.length > 0 &&
-                <DisplayTable label={"Locations"} data={selectionReturned}/>
+                <DisplayTable label={"Locations"} data={selectionReturned.map(obj=>{
+                    const filtered = {};
+                    console.log(Object.keys(obj))
+                    for (const [key, value] of Object.entries(obj)) {
+                        if (columns.includes(key)) filtered[key] = value;
+                    }
+                    return filtered;
+                })}/>
             }
         </Stack>
     )
