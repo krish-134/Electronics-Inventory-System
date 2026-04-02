@@ -132,23 +132,31 @@ app.get('/purchase', async c => {
     if (budget) {
         const parsed = parseFloat(budget)
         return c.json(await sql`
-            SELECT pur.*, sub.component_total
+            SELECT pur.order_number, pur.tracking_code, pur.date_placed, pur.delivery_date, pur.supplier, pur.courier,
+                sub.component_total AS price
             FROM purchase pur
             JOIN (
-                SELECT p1.order_number, SUM(component.price * purchaseincludes.quantity) AS component_total
+                SELECT p1.order_number, SUM(component.price * p1.quantity) AS component_total
                 FROM component
                 JOIN purchaseincludes p1 ON component.part_num = p1.part_num
                 GROUP BY p1.order_number
-                HAVING SUM(component.price * purchaseincludes.quantity) < ${parsed}
+                HAVING SUM(component.price * p1.quantity) < ${parsed}
                     AND 1 <= (
                         SELECT COUNT(*) FROM purchaseincludes p2
                         WHERE p2.order_number = p1.order_number
                     )
-            ) sub ON pur.order_number = sub.order_number
-        `)
-    }
-
-    return c.json(await sql`SELECT * FROM purchase`)
+                ) sub ON pur.order_number = sub.order_number
+            `)  
+        }
+    
+    return c.json(await sql`
+        SELECT pur.order_number, pur.tracking_code, pur.date_placed, pur.delivery_date, pur.supplier, pur.courier,
+            COALESCE(SUM(c.price * p1.quantity), NULL) AS price
+        FROM purchase pur
+        LEFT JOIN purchaseincludes p1 ON pur.order_number = p1.order_number
+        LEFT JOIN component c ON p1.part_num = c.part_num
+        GROUP BY pur.order_number, pur.tracking_code, pur.date_placed, pur.delivery_date, pur.supplier, pur.courier 
+    `)
 })
 
 app.post('/purchase', async c => { 
