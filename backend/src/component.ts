@@ -126,7 +126,7 @@ app.post('/:component_type', async c => {
             }
         } catch (error: any) {
             if (error.code === '23505') {
-                return c.json({ error: "A component with this part number already exists." }, 409);
+                return c.json({ error: "A component with this part number already exists" }, 409);
             }
             return c.json({ error: "Something went wrong" }, 500);
         }

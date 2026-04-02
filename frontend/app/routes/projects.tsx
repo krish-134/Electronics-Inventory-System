@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import DisplayTable from "../components/DisplayTable";
 import Toast, { ToastInput, ToastStyle } from "../components/Toast";
 import { Divider } from "@mui/material";
+import { useToast } from "../ToastProvider";
 
 const Projects: React.FC = () => {
     const [data, setData] = useState<object[]>([]);
     const [returned, setReturned] = useState<object[]>([]);
 
-    const [toastContent, showToast] = useState<ToastInput>();
-    const [toastOpen, setToastOpen] = useState<boolean>(false);
+    const { showToast } = useToast();
 
     function request() {
         fetch(`http://localhost:3000/project?has-all-components=true`)
