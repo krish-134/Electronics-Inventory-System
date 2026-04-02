@@ -12,7 +12,7 @@ const localHost = `http://localhost:3000`
 
 const columns: GridColDef[] = [
     { field: "order_number",  headerName: "Order #",       editable: true, flex: 0.5 },
-    { field: "price",         headerName: "Price",         editable: true, flex: 0.5 },
+    { field: "price",         headerName: "Price",         editable: false, flex: 0.5 },
     { field: "tracking_code", headerName: "Tracking Code", editable: true, flex: 0.6 },
     { field: "date_placed",   headerName: "Date Placed",   editable: true, flex: 1 },
     { field: "delivery_date", headerName: "Delivery Date", editable: true, flex: 1 },   
