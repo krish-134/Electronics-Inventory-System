@@ -6,7 +6,6 @@ import CapacitorTable from "../components/data/CapacitorTable"
 import DiodeTable from "../components/data/DiodeTable"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Component } from "../types"
-import { jsx } from "react/jsx-runtime"
 
 const Components: React.FC = () => {
     const [data, setData] = useState<(Component & { component_type: string })[]>()
