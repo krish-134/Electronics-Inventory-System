@@ -1,16 +1,14 @@
-import { Button, Card, CardContent, CardActions, Grid, Select, Stack, Typography, TextField, InputAdornment, FormControl, InputLabel, MenuItem } from "@mui/material"
+import { Button, IconButton, Card, CardContent, CardActions, Grid, Select, Stack, Typography, TextField, InputAdornment, FormControl, InputLabel, MenuItem } from "@mui/material"
 import { useCallback, useState, useEffect, } from "react"
 import { type GridColDef } from "@mui/x-data-grid"
 import { Link } from "react-router"
 import CustomTable, { AddCardProps } from "../CustomTable"
 import { ErrorMessage } from "@hookform/error-message"
 import { useForm, Controller } from "react-hook-form"
-import { ErrorOutline, Store, LocalShipping } from "@mui/icons-material"
+import { ErrorOutline, Store, LocalShipping, Clear } from "@mui/icons-material"
 import { Supplier, Courier } from "../../types"
 
 const localHost = `http://localhost:3000`
-
-
 
 const columns: GridColDef[] = [
     { field: "order_number",  headerName: "Order #",       editable: true, flex: 0.5 },
@@ -155,7 +153,11 @@ const PurchasesTable: React.FC = () => {
     }, [filterBudget])
     
     const mutateRow = useCallback(async (row, oldRow) => {
-        await fetch(`${localHost}/shipping/purchase/${oldRow.order_num}`)
+        await fetch(`${localHost}/shipping/purchase/${oldRow.order_num}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(row)
+        })
         return row
     }, [])
 
@@ -173,9 +175,9 @@ const PurchasesTable: React.FC = () => {
         }
     }
 
-    const handleFilter = () => {
+    const handleFilter = (value: string) => {
         const parsed = parseFloat(budget)
-        setFilterBudget(isNaN(parsed) ? null : parsed)
+        setFilterBudget(isNaN(parsed) || value === "" ? null : parsed)
     }
 
     const handleClear = () => {
@@ -185,7 +187,7 @@ const PurchasesTable: React.FC = () => {
 
     return (
         <Stack direction="column" sx={{ width: '100%' }}>
-            <Stack direction="row" justifyContent="space-between">
+            <Stack direction="row" justifyContent="space-between" alignItems="center">
 
                 <Typography component="h2" variant="h6">
                     Purchases
@@ -198,22 +200,35 @@ const PurchasesTable: React.FC = () => {
                             Showing purchases with component cost under ${filterBudget}
                         </Typography>
                     )}
-                    {filterBudget !== null && (
+                    {/* {filterBudget !== null && (
                         <Button variant="outlined" size="small" color="warning" onClick={handleClear}>
                             Clear
                         </Button>
                     )}
                     <Button variant="outlined" size="small" onClick={handleFilter}>
                         Filter
-                    </Button>
+                    </Button> */}
                     <TextField
                         // onBlur={}
                         label="Budget (component cost)"
                         value={budget}
                         onChange={e => setBudget(e.target.value)}
+                        onBlur={e => handleFilter(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') handleFilter(budget) }}
                         size="small"
                         type="number"
-                        slotProps={{ input: { startAdornment: <InputAdornment position="start">$</InputAdornment> } }}
+                        slotProps={{
+                            input: { 
+                                startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                                endAdornment: budget ? (
+                                    <InputAdornment position="end">
+                                        <IconButton size="small" onClick={handleClear} edge="end">
+                                            <Clear fontSize="small" />
+                                        </IconButton>
+                                    </InputAdornment>
+                                ) : null
+                            } 
+                        }}
                     />
                 </Stack>
             </Stack>
