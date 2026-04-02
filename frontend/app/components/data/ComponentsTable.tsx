@@ -300,6 +300,20 @@ const ComponentsTable: React.FC<Pick<CustomTableProps, "getData">> = ({ getData 
         return row
     }, [])
 
+    const handleDelete = async (ids: string[]) => {
+        const results = await Promise.all(
+            ids.map((id: any) =>
+                fetch(`http://localhost:3000/component/${id}`, { method: "DELETE" })
+                .then(async res => ({ id, ok: res.ok, body: await res.json() }))
+            )
+        )
+
+        const failed = results.filter(r => !r.ok)
+        if (failed.length > 0) {
+            alert(failed.map(f => f.body.error).join('\n'))
+        }
+    }
+
     return (
         <Stack direction="column">
             <Typography component="h2" variant="h6">
@@ -311,6 +325,7 @@ const ComponentsTable: React.FC<Pick<CustomTableProps, "getData">> = ({ getData 
                 columns={columns}
                 AddCard={AddCard}
                 mutateRow={mutateRow}
+                handleDelete={handleDelete}
             />
         </Stack>
     )

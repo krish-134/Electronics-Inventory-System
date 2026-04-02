@@ -120,6 +120,18 @@ const DeleteConfirm: React.FC<DeleteConfirmProps> = ({ rowSelectionModel, onDele
             ids = [... rowSelectionModel.ids]
         }
 
+        // const results = await Promise.all(
+        //     ids.map((id: any) =>
+        //         fetch(`http://localhost:3000/${tableName}/${id}`, { method: "DELETE" })
+        //         .then(async res => ({ id, ok: res.ok, body: await res.json() }))
+        //     )
+        // )
+
+        // const failed = results.filter(r => !r.ok)
+        // if (failed.length > 0) {
+        //     alert(failed.map(f => f.body.error).join('\n'))
+        // }
+
         await onDelete?.(ids)
 
         handleClose()
