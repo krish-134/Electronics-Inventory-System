@@ -57,8 +57,19 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
                             <TextField {...register('name', { required: 'Name is required' })} sx={{ width: '100%' }} label="Name" variant="outlined" />
                             <TextField {...register('code_format')} sx={{ width: '100%' }} label="Code Format" variant="outlined" />
                         </Stack>    
-                        <TextField {...register('website', { required: 'Website is required' })} sx={{ width: '100%' }} label="Website" variant="outlined" />
-                        <TextField {...register('contact_email')} sx={{ width: '100%' }} label="Country" variant="outlined" />
+                        <TextField {...register('website', { required: 'Website is required',
+                                            validate: (value) => {
+                                                try {
+                                                    new URL(value)
+                                                    return true
+                                                } catch {
+                                                    return 'Invalid URL'
+                                                }
+                                            }
+                                        })} sx={{ width: '100%' }} label="Website" variant="outlined" />
+                        <TextField {...register('contact_email', { 
+                                pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Invalid email address' }
+                            })} sx={{ width: '100%' }} label="Contact Email" variant="outlined" />
                     </Stack>
                     <Grid container sx={{ mt: 1 }}>
                         {['name', 'code_format', 'website', 'contact_email'].map(generateErrorMessage)}
