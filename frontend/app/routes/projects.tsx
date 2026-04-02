@@ -9,7 +9,7 @@ const Projects: React.FC = () => {
     const [data, setData] = useState<object[]>([]);
     const [returned, setReturned] = useState<object[]>([]);
 
-    const [toastContent, setToastContent] = useState<ToastInput>();
+    const [toastContent, showToast] = useState<ToastInput>();
     const [toastOpen, setToastOpen] = useState<boolean>(false);
 
     function request() {
@@ -18,8 +18,8 @@ const Projects: React.FC = () => {
             .then(data => {
                 setReturned(data)
                 if (!data.length) {
-                    setToastContent({display: "None of your projects use all of your components!", level: ToastStyle.ERROR});
-                    setToastOpen(true);
+                    showToast({display: "None of your projects use all of your components!", level: ToastStyle.ERROR});
+                     ;
                 }
             })
             .catch(err => console.error(err));
@@ -36,7 +36,7 @@ const Projects: React.FC = () => {
 
     return (
         <div className="flex flex-col space-y-6 w-full">   
-            <Toast open={toastOpen} setOpen={setToastOpen} content={toastContent} />
+             
 
             <DisplayTable data={data} label={"Projects"}/>
 

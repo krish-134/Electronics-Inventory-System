@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button, Card, CardContent, CardActions, Grid, Stack, Typography, TextField } from "@mui/material"
 import { useCallback } from "react"
 import { type GridColDef } from "@mui/x-data-grid"
@@ -6,6 +6,8 @@ import CustomTable, { AddCardProps } from "../CustomTable"
 import { ErrorMessage } from "@hookform/error-message"
 import { useForm, Controller } from "react-hook-form"
 import { ErrorOutline } from "@mui/icons-material"
+import Toast, { ToastInput, ToastStyle } from "../../components/Toast";
+import { useToast } from "../../ToastProvider";
 
 const localHost = `http://localhost:3000`
 
@@ -88,6 +90,8 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
 }
 
 const SuppliersTable: React.FC = () => {
+    const { showToast } = useToast();
+
     const getData = useCallback(async () => {
         return await fetch(`${localHost}/shipping/supplier`)
             .then(res => res.json())
@@ -113,12 +117,14 @@ const SuppliersTable: React.FC = () => {
 
         const failed = results.filter(r => !r.ok)
         if (failed.length > 0) {
-            alert(failed.map(f => f.body.error).join('\n'))
+            showToast({display:failed.map(f => f.body.error).join('\n'), level: ToastStyle.ERROR});
+             ;
         }
     }
 
     return (
         <Stack direction="column" sx={{ width: '100%' }}>
+             
             <Typography component="h2" variant="h6">
                 Suppliers
             </Typography>

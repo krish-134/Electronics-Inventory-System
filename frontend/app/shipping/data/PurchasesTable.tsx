@@ -141,7 +141,7 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
 
 
 const PurchasesTable: React.FC = () => {
-    const [toastContent, setToastContent] = useState<ToastInput>();
+    const [toastContent, showToast] = useState<ToastInput>();
     const [toastOpen, setToastOpen] = useState<boolean>(false);
 
     const [budget, setBudget] = useState<string>("")
@@ -175,8 +175,8 @@ const PurchasesTable: React.FC = () => {
 
         const failed = results.filter(r => !r.ok)
         if (failed.length > 0) {
-            setToastContent({display:failed.map(f => f.body.error).join('\n'), level: ToastStyle.ERROR});
-            setToastOpen(true);
+            showToast({display:failed.map(f => f.body.error).join('\n'), level: ToastStyle.ERROR});
+             ;
         }
     }
 
@@ -192,7 +192,7 @@ const PurchasesTable: React.FC = () => {
 
     return (
         <Stack direction="column" sx={{ width: '100%' }}>
-            <Toast open={toastOpen} setOpen={setToastOpen} content={toastContent} />
+             
             <Stack direction="row" justifyContent="space-between" alignItems="center">
 
                 <Typography component="h2" variant="h6">

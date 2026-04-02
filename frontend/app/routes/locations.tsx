@@ -11,7 +11,7 @@ import Button from "@mui/material/Button";
 import { Box, Chip, Divider, Slide, Snackbar, TextField } from "@mui/material";
 import DisplayTable from "../components/DisplayTable";
 import Toast, { ToastInput, ToastStyle } from "../components/Toast";
-
+import { useToast } from "../ToastProvider";
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
 const MenuProps = {
@@ -74,8 +74,7 @@ const LocationsPage: React.FC = () => {
     const [selectedAttribute, setSelectedAttribute] = useState<string>("");
     const [queriedValue, setQueriedValue] = useState<number>(0);
 
-    const [toastContent, setToastContent] = useState<ToastInput>();
-    const [toastOpen, setToastOpen] = useState<boolean>(false);
+    const { showToast } = useToast();
     const [invalidFields, setInvalidFields] = useState<boolean[]>([false, false, false]);
 
     const [returned, setReturned] = useState<object[]>([]);
@@ -88,8 +87,7 @@ const LocationsPage: React.FC = () => {
 
     function request() {
         if (!selectedAttribute || !selectedOperator || selectedColumns.length <= 0) {
-            setToastContent({display: "Missing required fields!", level: ToastStyle.ERROR});
-            setToastOpen(true);
+            showToast({display: "Missing required fields!", level: ToastStyle.ERROR});
             setInvalidFields([
                 !selectedAttribute,
                 !selectedOperator,
@@ -106,8 +104,7 @@ const LocationsPage: React.FC = () => {
             .then(data => {
                 setReturned(data);
                 if (!data.length) {
-                    setToastContent({display: "No results found with these restrictions!", level: ToastStyle.ERROR});
-                    setToastOpen(true);
+                    showToast({display: "No results found with these restrictions!", level: ToastStyle.ERROR});
                 }
             })
             .catch(err => console.error(err));
@@ -125,7 +122,6 @@ const LocationsPage: React.FC = () => {
 
     return (
         <div className="flex flex-col space-y-6 w-full">
-            <Toast open={toastOpen} setOpen={setToastOpen} content={toastContent} />
             <Locations />
 
             <Divider sx={{ my: 3 }}/>
