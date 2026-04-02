@@ -135,11 +135,11 @@ app.get('/purchase', async c => {
             SELECT pur.*, sub.component_total
             FROM purchase pur
             JOIN (
-                SELECT p1.order_number, SUM(component.price * component.quantity) AS component_total
+                SELECT p1.order_number, SUM(component.price * purchaseincludes.quantity) AS component_total
                 FROM component
                 JOIN purchaseincludes p1 ON component.part_num = p1.part_num
                 GROUP BY p1.order_number
-                HAVING SUM(component.price * component.quantity) < ${parsed}
+                HAVING SUM(component.price * purchaseincludes.quantity) < ${parsed}
                     AND 1 <= (
                         SELECT COUNT(*) FROM purchaseincludes p2
                         WHERE p2.order_number = p1.order_number

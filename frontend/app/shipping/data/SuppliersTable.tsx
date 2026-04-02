@@ -56,7 +56,7 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
                             <TextField {...register('url', { required: 'URL is required' })} sx={{ width: '100%' }} label="URL" variant="outlined" />
                         </Stack>    
                         <TextField {...register('country', { required: 'Country is required' })} sx={{ width: '100%' }} label="Country" variant="outlined" />
-                        <TextField {...register('contact_email')} sx={{ width: '100%' }} label="Country" variant="outlined" />
+                        <TextField {...register('contact_email')} sx={{ width: '100%' }} label="Contact Email" variant="outlined" />
                     </Stack>
                     <Grid container sx={{ mt: 1 }}>
                         {['name', 'url', 'country', 'contact_email'].map(generateErrorMessage)}
