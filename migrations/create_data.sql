@@ -1,3 +1,21 @@
+-- Order matters!
+DROP TABLE resistor;
+DROP TABLE capacitor;
+DROP TABLE diode;
+DROP TABLE version;
+DROP TABLE purchaseincludes;
+DROP TABLE makes;
+DROP TABLE users;
+DROP TABLE includes;
+DROP TABLE component;
+DROP TABLE project;
+DROP TABLE position;
+DROP TABLE storage;
+DROP TABLE facility;
+DROP TABLE purchase;
+DROP TABLE courier;
+DROP TABLE supplier;
+
 CREATE TABLE Users (
     username  VARCHAR PRIMARY KEY,
     password  VARCHAR NOT NULL,
@@ -165,6 +183,7 @@ CREATE TABLE Purchase (
 CREATE TABLE PurchaseIncludes (
     order_number VARCHAR,
     part_num VARCHAR,
+    quantity INT NOT NULL,
 
     FOREIGN KEY (order_number)
         REFERENCES Purchase(order_number)
@@ -182,7 +201,7 @@ CREATE TABLE PurchaseIncludes (
 CREATE TABLE Includes (
     project_name       VARCHAR,
     component_part_num VARCHAR,
-    quantity           VARCHAR NOT NULL,
+    quantity           INT NOT NULL,
 
     PRIMARY KEY (project_name, component_part_num),
 
@@ -302,25 +321,36 @@ INSERT INTO Purchase (order_number, price, tracking_code, date_placed, delivery_
 ('2', 45.20, '9999999999999999', '2026-03-06 10:00:00', '2026-03-06 10:00:01', 'mouser', 'united_parcel_service'),
 ('3', 210.00, '987654321', '2026-03-06 10:00:00', '2026-03-06 10:00:01', 'lcsc', 'dhl'),
 ('4', 12.99, '22222222222222222', '2026-03-06 10:00:00', '2026-03-06 10:00:01', 'adafruit', 'united_states_postal_service'),
-('5', 88.00, 'ABC123321CBA', '2026-03-06 10:00:00', '2026-03-06 10:00:01', 'farnell', 'canada_post');
+('5', 88.00, 'ABC123321CBA', '2026-03-06 10:00:00', '2026-03-06 10:00:01', 'farnell', 'canada_post'),
+('6', 25.00, '12123434', '2026-03-06 10:00:00', '2026-03-06 10:00:01', 'digikey', 'dhl');
+
 
 -- PurchaseIncludes --
-INSERT INTO PurchaseIncludes (order_number, part_num) VALUES
-('1', 'CAP-100NF'),
-('1', 'CAP-10UF'),
-('1', 'RES-10K'),
-('2', 'RES-1K'),
-('2', 'DIO-1N4148');
+INSERT INTO PurchaseIncludes (order_number, part_num, quantity) VALUES
+('1', 'CAP-100NF', 5),
+('1', 'CAP-10UF', 4),
+('1', 'RES-10K', 3),
+('2', 'RES-1K', 2),
+('2', 'DIO-1N4148', 1);
 
 -- Includes --
 INSERT INTO Includes (project_name, component_part_num, quantity) VALUES 
-('sub_bot', 'RES-10K', '10'),
-('sub_bot', 'CAP-100NF', '5'),
-('sub_bot', 'RES-1K', '3'),
-('sub_bot', 'DIO-1N4148', '1'),
-('soccer_bot', 'RES-1K', '20'),
-('humanoid_robot', 'CAP-10UF', '4'),
-('sanitizer_dispenser', 'DIO-1N4148', '2');
+('sub_bot', 'RES-10K', 10),
+('sub_bot', 'CAP-100NF', 5),
+('sub_bot', 'CAP-10UF', 9),
+('sub_bot', 'RES-1K', 3),
+('sub_bot', 'DIO-1N4148', 1),
+('temperature_reader', 'RES-10K', 10),
+('temperature_reader', 'CAP-100NF', 5),
+('temperature_reader', 'CAP-10UF', 9),
+('temperature_reader', 'RES-1K', 3),
+('temperature_reader', 'DIO-1N4148', 1),
+('soccer_bot', 'RES-10K', 10),
+('soccer_bot', 'CAP-100NF', 5),
+('soccer_bot', 'CAP-10UF', 9),
+('soccer_bot', 'RES-1K', 3),
+('humanoid_robot', 'CAP-10UF', 4),
+('sanitizer_dispenser', 'DIO-1N4148', 2);
 
 -- Makes --
 INSERT INTO Makes (project_name, username) VALUES 
