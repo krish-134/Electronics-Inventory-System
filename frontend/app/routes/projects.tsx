@@ -2,12 +2,12 @@ import type React from "react"
 import Button from "@mui/material/Button";
 import { useState } from "react";
 import DisplayTable from "../components/DisplayTable";
-import Toast, { ToastStyle } from "../components/Toast";
+import Toast, { ToastInput, ToastStyle } from "../components/Toast";
 
 const Projects: React.FC = () => {
     const [returned, setReturned] = useState<object[]>([]);
-    const [errorText, setErrorText] = useState<string>();
 
+    const [toastContent, setToastContent] = useState<ToastInput>();
     const [toastOpen, setToastOpen] = useState<boolean>(false);
 
     function request() {
@@ -16,7 +16,7 @@ const Projects: React.FC = () => {
             .then(data => {
                 setReturned(data)
                 if (!data.length) {
-                    setErrorText("None of your projects use all of your components!");
+                    setToastContent({display: "None of your projects use all of your components!", level: ToastStyle.ERROR});
                     setToastOpen(true);
                 }
             })
@@ -24,8 +24,8 @@ const Projects: React.FC = () => {
     }
 
     return (
-        <div className="flex flex-col my-3 space-y-6 pt-9 w-full">   
-            <Toast open={toastOpen} setOpen={setToastOpen} text={errorText} style={ToastStyle.ERROR} />
+        <div className="flex flex-col space-y-6 w-full">   
+            <Toast open={toastOpen} setOpen={setToastOpen} content={toastContent} />
             
             <p>
                 Click this button to see the projects that use all of your components!

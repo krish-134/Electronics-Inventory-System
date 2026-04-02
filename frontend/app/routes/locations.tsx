@@ -124,7 +124,7 @@ const LocationsPage: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col my-3 space-y-6 pt-9 w-full">
+        <div className="flex flex-col space-y-6 w-full">
             <Toast open={toastOpen} setOpen={setToastOpen} content={toastContent} />
             <Locations />
 
