@@ -7,6 +7,7 @@ import { Link } from 'react-router'
 import { DndProvider, useDrag, useDrop } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { produce } from 'immer';
+import Toast, { ToastInput, ToastStyle } from "../Toast"
 
 type ItemProps = {
     id: string
@@ -44,7 +45,7 @@ type DropHandler = (id: string, itemType: 'component' | 'project', from: Locatio
 const ComponentList = ({ children, editing, isEmpty, onRename, onDelete, handleDrop, ...location }: React.PropsWithChildren<Location & {
     editing: boolean
     isEmpty: boolean
-    onRename: (newName: string) => void
+    onRename: (newName: string) => Promise<boolean | void>
     onDelete: (e: React.MouseEvent<HTMLElement>) => void
     handleDrop: DropHandler
 }>) => {
@@ -66,7 +67,7 @@ const ComponentList = ({ children, editing, isEmpty, onRename, onDelete, handleD
         <Stack>
             <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
                 {editing
-                    ? <TextField size="small" variant="standard" defaultValue={location.position} onBlur={e => { if (e.target.value !== location.position) onRename(e.target.value) }} />
+                    ? <TextField size="small" variant="standard" defaultValue={location.position} onBlur={async e => { if (e.target.value !== location.position) { const ok = await onRename(e.target.value); if (ok === false) e.target.value = location.position; } }} />
                     : <Typography variant="subtitle2">{location.position}</Typography>}
                 {editing && (
                     <Tooltip title={isEmpty ? "Delete position" : "Remove all components first"}>
@@ -133,6 +134,9 @@ const Locations: React.FC = () => {
             }
         }
     }>({})
+
+    const [toastContent, setToastContent] = useState<ToastInput>();
+    const [toastOpen, setToastOpen] = useState<boolean>(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -225,6 +229,12 @@ const Locations: React.FC = () => {
         await fetch("http://localhost:3000/location/create", {
             method: "POST",
             body: JSON.stringify({ location, type: loc_type })
+        }).then(res=>{
+            if (res.status == 409) {
+                setToastContent({display: "Rename your newly created one first!", level: ToastStyle.ERROR});
+                setToastOpen(true);
+                return false;
+            };  
         })
         switch (loc_type) {
             case "facility":
@@ -264,11 +274,18 @@ const Locations: React.FC = () => {
     }
 
     const renameFacility = async (oldName: string, newName: string) => {
-        await fetch('http://localhost:3000/location/rename', {
+        const res = await fetch('http://localhost:3000/location/rename', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ type: 'facility', oldName, newName })
         })
+        
+        if (res.status == 409) {
+            setToastContent({display: "A facility with this name already exists", level: ToastStyle.ERROR});
+            setToastOpen(true);
+            return false;
+        };  
+
         setItemLocations(produce(draft => {
             const rebuilt = {};
             for (const key of Object.keys(draft)) {
@@ -276,14 +293,23 @@ const Locations: React.FC = () => {
             }
             return rebuilt;
         }))
+
+        return true;
     }
 
     const renameStorage = async (facility: string, oldName: string, newName: string) => {
-        await fetch('http://localhost:3000/location/rename', {
+        const res = await fetch('http://localhost:3000/location/rename', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ type: 'storage', oldName, newName, facility })
         })
+
+        if (res.status == 409) {
+            setToastContent({display: "A storage with this name already exists", level: ToastStyle.ERROR});
+            setToastOpen(true);
+            return false;
+        };
+
         setItemLocations(produce(draft => {
             const rebuilt = {};
             for (const key of Object.keys(draft[facility])) {
@@ -291,14 +317,23 @@ const Locations: React.FC = () => {
             }
             draft[facility] = rebuilt;
         }))
+
+        return true;
     }
 
     const renamePosition = async (facility: string, storage: string, oldName: string, newName: string) => {
-        await fetch('http://localhost:3000/location/rename', {
+        const res = await fetch('http://localhost:3000/location/rename', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ type: 'position', oldName, newName, facility, storage })
         })
+
+        if (res.status == 409) {
+            setToastContent({display: "A position with this name already exists", level: ToastStyle.ERROR});
+            setToastOpen(true);
+            return false;
+        }
+
         setItemLocations(produce(draft => {
             const rebuilt = {};
             for (const key of Object.keys(draft[facility][storage])) {
@@ -306,6 +341,8 @@ const Locations: React.FC = () => {
             }
             draft[facility][storage] = rebuilt;
         }))
+
+        return true;
     }
 
     const deleteLocation = async (location: Omit<Location, 'position_id'>, loc_type: LocationType) => {
@@ -337,6 +374,7 @@ const Locations: React.FC = () => {
 
     return (
         <DndProvider backend={HTML5Backend}>
+            <Toast open={toastOpen} setOpen={setToastOpen} content={toastContent} />
             <Stack direction="row" sx={{ justifyContent: "flex-end", width: "100%" }}>
                 <Button variant="outlined" onClick={() => setEditing(e => !e)} startIcon={editing ? (<Save />) : (<EditIcon />)}>
                     {editing ? "Save" : "Edit" }
@@ -348,7 +386,7 @@ const Locations: React.FC = () => {
                     <Grid key={facility} sx={{ border: "1px solid", borderColor: "divider", p: 4, borderRadius: 2, width: "100%", mb: 2 }}>
                         <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
                             {editing
-                                ? <TextField size="small" variant="standard" defaultValue={facility} onBlur={e => { if (e.target.value !== facility) renameFacility(facility, e.target.value) }} inputProps={{ style: { fontSize: '1.25rem', fontWeight: 500 } }} />
+                                ? <TextField size="small" variant="standard" defaultValue={facility} onBlur={async e => { if (e.target.value !== facility) { const ok = await renameFacility(facility, e.target.value); if (ok === false) e.target.value = facility; } }} />
                                 : <Typography variant="h6">{facility}</Typography>}
                             {editing && (
                                 <Tooltip title={isFacilityEmpty(storages) ? "Delete facility" : "Remove all components first"}>
@@ -365,7 +403,7 @@ const Locations: React.FC = () => {
                                 <Box key={storage_name} sx={{ border: "1px solid", borderColor: "background.paper", p: 4, borderRadius: 2, width: "100%" }}>
                                     <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
                                         {editing
-                                            ? <TextField size="small" variant="standard" defaultValue={storage_name} onBlur={e => { if (e.target.value !== storage_name) renameStorage(facility, storage_name, e.target.value) }} />
+                                            ? <TextField size="small" variant="standard" defaultValue={storage_name} onBlur={async e => { if (e.target.value !== storage_name) { const ok = await renameStorage(facility, storage_name, e.target.value); if (ok === false) e.target.value = storage_name; } }} />
                                             : <Typography variant="subtitle1">{storage_name}</Typography>}
                                         {editing && (
                                             <Tooltip title={isStorageEmpty(locs) ? "Delete storage" : "Remove all components first"}>

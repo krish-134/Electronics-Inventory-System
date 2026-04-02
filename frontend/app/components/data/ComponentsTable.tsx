@@ -11,6 +11,7 @@ import JsonViewComponent from "../JsonViewComponent"
 import { ErrorOutline, Inventory, Store } from "@mui/icons-material"
 import { useForm, Controller, Validate, FieldValues, FieldValue, ValidateResult } from 'react-hook-form'
 import { ErrorMessage } from '@hookform/error-message'
+import Toast, { ToastInput, ToastStyle } from "../Toast"
 
 const columns: GridColDef[] = [
     {
@@ -76,6 +77,9 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
     const [storageOptions, setStorageOptions] = useState<Location[]>([])
     const [supplierOptions, setSupplierOptions] = useState<Supplier[]>([])
     const [componentType, setComponentType] = useState<string>("");
+
+    const [toastContent, setToastContent] = useState<ToastInput>();
+    const [toastOpen, setToastOpen] = useState<boolean>(false);
 
     const { handleSubmit, control, register, formState: { errors } } = useForm()
 
@@ -154,8 +158,11 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
             if (Math.floor(res.status / 100) == 2) {
                 setModalOpen(false)
                 handleAdd(newRow)
+            } else if (res.status == 409) {
+                setToastContent({display: "A component with this part number already exists", level: ToastStyle.ERROR});
+                setToastOpen(true);
             }
-        })
+        });
     }
 
     const generateErrorMessage = (name: string) => {
@@ -181,6 +188,7 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
 
     return (
         <Card variant="outlined" sx={{ bgcolor: 'background.paper', width: '50%', minWidth: '600px', maxWidth: '1000px' }}>
+            <Toast open={toastOpen} setOpen={setToastOpen} content={toastContent} />
             <form onSubmit={handleSubmit(onSubmit)}>
                 <CardContent>
                     <Typography variant="h3">{label}</Typography>
