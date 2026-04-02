@@ -2,9 +2,8 @@ import { DataGrid, GridColDef, GridRowModel, GridRowSelectionModel } from "@mui/
 import type React from "react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useLocation } from "react-router"
-import CustomToolbar from "./data/CustomToolbar"
+import CustomToolbar from "./CustomToolbar"
 import { GlobalStyles, Modal, Stack } from "@mui/material"
-import Toast, { ToastInput, ToastStyle } from "./Toast"
 
 type Rows = readonly any[]
 
@@ -30,16 +29,9 @@ const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns, AddC
     const location = useLocation()
     const hasScrolled = useRef(false)
 
-    const [toastContent, setToastContent] = useState<ToastInput>();
-    const [toastOpen, setToastOpen] = useState<boolean>(false);
-
     useEffect(() => {
         getData().then(setRows)
-    }, [])
-
-    // useEffect(() => {
-    //     getData().then(setRows)
-    // }, [rows])
+    }, [getData])
 
     useEffect(() => {
         if (!location.hash || !rows?.length || hasScrolled.current) return;
@@ -59,28 +51,23 @@ const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns, AddC
     }
 
     const handleAdd = (r: Rows) => {
-        setRows(oldRows => [...(oldRows ?? []), { id: rows?.length, ...r }]);
-        setToastContent({ display: "Successfully added item!", level: ToastStyle.SUCCESS });
-        setToastOpen(true);
-    };
+        setRows(oldRows => [...(oldRows ?? []), { id: rows?.length, ...r }])
+    }
 
     const processUpdate = useCallback(async (newRow: any, oldRow: any) => {
         const response = await mutateRow(newRow, oldRow);
-        if (JSON.stringify(oldRow) !== JSON.stringify(newRow)){
-            setToastContent({ display: "Successfully updated item!", level: ToastStyle.SUCCESS });
-            setToastOpen(true);
-        }
+        // TODO: better feedback
         return response;
     }, [mutateRow])
 
-    const handleProcessRowUpdateError = useCallback((err: any) => {
-        setToastContent({ display: err.message, level: ToastStyle.ERROR });
-        setToastOpen(true);
+    const handleProcessRowUpdateError = useCallback(err => {
+        // TODO: better feedback
+        // alert(err)
+        console.error(err)
     }, []);
 
     return (
         <>
-            <Toast open={toastOpen} setOpen={setToastOpen} content={toastContent} />
             <GlobalStyles styles={{
                 '@keyframes row-flash': {
                     '0%': { backgroundColor: 'transparent' },

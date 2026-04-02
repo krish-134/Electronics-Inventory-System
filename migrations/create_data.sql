@@ -173,11 +173,11 @@ CREATE TABLE Purchase (
     
     FOREIGN KEY (supplier)
         REFERENCES Supplier(name)
-        ON DELETE SET NULL,
+        ON DELETE NO ACTION,
 
     FOREIGN KEY (courier)
         REFERENCES Courier(name)
-        ON DELETE SET NULL
+        ON DELETE NO ACTION
 );
 
 CREATE TABLE PurchaseIncludes (
@@ -187,7 +187,8 @@ CREATE TABLE PurchaseIncludes (
 
     FOREIGN KEY (order_number)
         REFERENCES Purchase(order_number)
-        ON DELETE NO ACTION,
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
 
     FOREIGN KEY (part_num)
         REFERENCES Component(part_num)
