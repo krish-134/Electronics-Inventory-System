@@ -9,6 +9,7 @@ import { Component } from "../types"
 import { formatString } from "./locations"
 import DisplayTable from "../components/DisplayTable"
 import Toast, { ToastInput, ToastStyle } from "../components/Toast"
+import { useToast } from "../ToastProvider"
 
 const columns = [
     'part_num',
@@ -44,8 +45,7 @@ const Components: React.FC = () => {
     const getCapacitors = useCallback(async () => data?.filter(d => d.component_type == "capacitor"), [data])
     const getDiodes = useCallback(async () => data?.filter(d => d.component_type == "diode"), [data])
 
-    const [toastContent, showToast] = useState<ToastInput>();
-    const [toastOpen, setToastOpen] = useState<boolean>(false);
+    const { showToast } = useToast();
 
     // was triggering on every refresh, so memoize it
     const memoizedTables = useMemo(() => {

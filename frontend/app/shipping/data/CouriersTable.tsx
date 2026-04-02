@@ -8,6 +8,7 @@ import { useForm, Controller } from "react-hook-form"
 import { ErrorOutline } from "@mui/icons-material"
 import { rowSelectionStateInitializer } from "@mui/x-data-grid/internals";
 import Toast, { ToastInput, ToastStyle } from "../../components/Toast";
+import { useToast } from "../../ToastProvider";
 
 const localHost = `http://localhost:3000`
 
@@ -19,8 +20,9 @@ const columns: GridColDef[] = [
 ]
 
 const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => {
-    const { handleSubmit, register, control, formState: { errors } } = useForm();
+    const { showToast } = useToast();
 
+    const { handleSubmit, register, control, formState: { errors } } = useForm();
     
     const generateErrorMessage = (name: string) => (
         <ErrorMessage errors={errors} name={name} render={({ message }) => (
@@ -40,8 +42,11 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
             body: JSON.stringify(data)
         }).then(res => {
             if (Math.floor(res.status / 100) === 2) {
+                showToast({display: "Successfully created a new courier!", level: ToastStyle.SUCCESS});
                 setModalOpen(false)
                 handleAdd(data)
+            } else if (res.status == 409) {
+                showToast({display: "A courier with this name already exists", level: ToastStyle.ERROR});
             }
         })
     }
@@ -87,8 +92,7 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
 }
 
 const CouriersTable: React.FC = () => {
-    const [toastContent, showToast] = useState<ToastInput>();
-    const [toastOpen, setToastOpen] = useState<boolean>(false);
+    const { showToast } = useToast();
 
     const getData = useCallback(async () => {
         return await fetch(`${localHost}/shipping/courier`)
@@ -98,11 +102,21 @@ const CouriersTable: React.FC = () => {
 
 
     const mutateRow = useCallback(async (row, oldRow) => {
-        await fetch(`${localHost}/shipping/courier/${oldRow.name}`, {
+        const res = await fetch(`${localHost}/shipping/courier/${oldRow.name}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(row)
         })
+
+        if (JSON.stringify(row) !== JSON.stringify(oldRow)) {
+            if (!res.ok) {
+                showToast({display: "Input is invalid!", level: ToastStyle.ERROR});
+                return oldRow;
+            } else {
+                showToast({display: "Successfully edited item!", level: ToastStyle.SUCCESS});
+            }
+        }
+
         return row
     }, [])          
 
@@ -118,7 +132,8 @@ const CouriersTable: React.FC = () => {
         const failed = results.filter(r => !r.ok)
         if (failed.length > 0) {
             showToast({display:failed.map(f => f.body.error).join('\n'), level: ToastStyle.ERROR});
-             ;
+        } else {
+            showToast({display:"Successfully deleted item(s)!", level: ToastStyle.SUCCESS});
         }
     }
 

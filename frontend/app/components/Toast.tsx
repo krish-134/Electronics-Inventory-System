@@ -53,6 +53,8 @@ function Toast({ open, setOpen, content } : {open: any, setOpen: any, content: T
 		onClose={() => setOpen(false)}
 		message={content?.display ?? "Something went wrong!"}
 		slotProps={Styles.get(content?.level)}
+		sx={{zIndex: 99999999}}
+		className="z-99999999"
 	/>
 }
 

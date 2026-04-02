@@ -104,6 +104,7 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
             JSON.parse(value);
             return undefined;
         } catch (e) {
+            showToast({display: "Invalid JSON input!", level: ToastStyle.ERROR})
             return "Invalid JSON in Additional Data"
         }
     }
@@ -319,6 +320,8 @@ const ComponentsTable: React.FC<Pick<CustomTableProps, "getData">> = ({ getData 
         const failed = results.filter(r => !r.ok)
         if (failed.length > 0) {
             showToast({display:failed.map(f => f.body.error).join('\n'), level: ToastStyle.ERROR});
+        } else {
+            showToast({display:"Successfully deleted item(s)!", level: ToastStyle.SUCCESS});
         }
     }
 
