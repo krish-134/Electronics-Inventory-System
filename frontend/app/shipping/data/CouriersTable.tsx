@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button, Card, CardContent, CardActions, Grid, Select, Stack, Typography, TextField, InputAdornment, FormControl, InputLabel, MenuItem } from "@mui/material"
 import { useCallback } from "react"
 import { type GridColDef } from "@mui/x-data-grid"
@@ -7,6 +7,7 @@ import { ErrorMessage } from "@hookform/error-message"
 import { useForm, Controller } from "react-hook-form"
 import { ErrorOutline } from "@mui/icons-material"
 import { rowSelectionStateInitializer } from "@mui/x-data-grid/internals";
+import Toast, { ToastInput, ToastStyle } from "../../components/Toast";
 
 const localHost = `http://localhost:3000`
 
@@ -86,6 +87,9 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
 }
 
 const CouriersTable: React.FC = () => {
+    const [toastContent, setToastContent] = useState<ToastInput>();
+    const [toastOpen, setToastOpen] = useState<boolean>(false);
+
     const getData = useCallback(async () => {
         return await fetch(`${localHost}/shipping/courier`)
             .then(res => res.json())
@@ -113,13 +117,15 @@ const CouriersTable: React.FC = () => {
 
         const failed = results.filter(r => !r.ok)
         if (failed.length > 0) {
-            alert(failed.map(f => f.body.error).join('\n'))
+            setToastContent({display:failed.map(f => f.body.error).join('\n'), level: ToastStyle.ERROR});
+            setToastOpen(true);
         }
     }
 
 
     return (
         <Stack direction="column" sx={{ width: '100%' }}>
+            <Toast open={toastOpen} setOpen={setToastOpen} content={toastContent} />
             <Typography component="h2" variant="h6">
                 Couriers
             </Typography>

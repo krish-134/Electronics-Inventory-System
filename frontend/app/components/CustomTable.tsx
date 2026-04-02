@@ -37,10 +37,6 @@ const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns, AddC
         getData().then(setRows)
     }, [])
 
-    // useEffect(() => {
-    //     getData().then(setRows)
-    // }, [rows])
-
     useEffect(() => {
         if (!location.hash || !rows?.length || hasScrolled.current) return;
         const id = decodeURIComponent(location.hash.slice(1));

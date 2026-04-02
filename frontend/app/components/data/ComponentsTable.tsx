@@ -187,7 +187,7 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
     }
 
     return (
-        <Card variant="outlined" sx={{ bgcolor: 'background.paper', width: '50%', minWidth: '600px', maxWidth: '1000px' }}>
+        <Card variant="outlined" sx={{ bgcolor: 'background.paper', width: '50%', minWidth: '600px', maxWidth: '1000px', maxHeight: '90vh', overflowY: 'auto' }}>
             <Toast open={toastOpen} setOpen={setToastOpen} content={toastContent} />
             <form onSubmit={handleSubmit(onSubmit)}>
                 <CardContent>
@@ -303,6 +303,9 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
 }
 
 const ComponentsTable: React.FC<Pick<CustomTableProps, "getData">> = ({ getData }) => {
+    const [toastContent, setToastContent] = useState<ToastInput>();
+    const [toastOpen, setToastOpen] = useState<boolean>(false);
+
     const mutateRow = useCallback(async (row, oldRow) => {
         await fetch(`http://localhost:3000/component/${oldRow.part_num}`, { method: "PUT", body: JSON.stringify(row) });
         return row
@@ -318,12 +321,14 @@ const ComponentsTable: React.FC<Pick<CustomTableProps, "getData">> = ({ getData 
 
         const failed = results.filter(r => !r.ok)
         if (failed.length > 0) {
-            alert(failed.map(f => f.body.error).join('\n'))
+            setToastContent({display:failed.map(f => f.body.error).join('\n'), level: ToastStyle.ERROR});
+            setToastOpen(true);
         }
     }
 
     return (
         <Stack direction="column">
+            <Toast open={toastOpen} setOpen={setToastOpen} content={toastContent} />
             <Typography component="h2" variant="h6">
                 Components
             </Typography>

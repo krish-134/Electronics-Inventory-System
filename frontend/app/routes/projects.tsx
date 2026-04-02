@@ -36,12 +36,11 @@ const Projects: React.FC = () => {
 
     return (
         <div className="flex flex-col space-y-6 w-full">   
+            <Toast open={toastOpen} setOpen={setToastOpen} content={toastContent} />
 
             <DisplayTable data={data} label={"Projects"}/>
 
             <Divider sx={{my:3}}/>
-
-            <Toast open={toastOpen} setOpen={setToastOpen} content={toastContent} />
             
             <p>
                 Click this button to see the projects that use all of your components!
