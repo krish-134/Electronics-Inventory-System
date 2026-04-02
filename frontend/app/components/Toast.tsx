@@ -40,15 +40,19 @@ const Styles: ReadonlyMap<number, object> = new Map([
 	}],
 ]);
 
-function Toast({ open, setOpen, text, style } : {open: any, setOpen: any, text: string | undefined, style: ToastStyle}) : React.JSX.Element {
+export type ToastInput = {display: string | undefined, level: ToastStyle};
+
+function Toast({ open, setOpen, content } : {open: any, setOpen: any, content: ToastInput | undefined}) : React.JSX.Element {
+	if (!content) return <></>;
+
 	return <Snackbar
 		open={open}
 		anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
 		slots={{ transition: SlideTransition }}
 		autoHideDuration={2500}
 		onClose={() => setOpen(false)}
-		message={text ?? "Something went wrong!"}
-		slotProps={Styles.get(style)}
+		message={content?.display ?? "Something went wrong!"}
+		slotProps={Styles.get(content?.level)}
 	/>
 }
 
