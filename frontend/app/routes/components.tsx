@@ -8,7 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { Component } from "../types"
 import { formatString } from "./locations"
 import DisplayTable from "../components/DisplayTable"
-import Toast, { ToastStyle } from "../components/Toast"
+import Toast, { ToastInput, ToastStyle } from "../components/Toast"
 
 const columns = [
     'part_num',
@@ -44,8 +44,8 @@ const Components: React.FC = () => {
     const getCapacitors = useCallback(async () => data?.filter(d => d.component_type == "capacitor"), [data])
     const getDiodes = useCallback(async () => data?.filter(d => d.component_type == "diode"), [data])
 
+    const [toastContent, setToastContent] = useState<ToastInput>();
     const [toastOpen, setToastOpen] = useState<boolean>(false);
-    const [errorText, setErrorText] = useState<string>();
 
     // was triggering on every refresh, so memoize it
     const memoizedTables = useMemo(() => {
@@ -70,7 +70,7 @@ const Components: React.FC = () => {
 
     function request() {
         if (filters.some(f => f.field === '' || f.operator === '' || f.value.trim() === '')) {
-            setErrorText("Please fill out all filter fields before searching");
+            setToastContent({display: "Please fill out all filter fields before searching", level: ToastStyle.ERROR});
             setToastOpen(true);
             return;
         }
@@ -87,7 +87,7 @@ const Components: React.FC = () => {
             .then(data => {
                 setSelectionReturned(data);
                 if (!data.length) {
-                    setErrorText("No results found with these restrictions!");
+                    setToastContent({display: "No results found with these restrictions!", level: ToastStyle.ERROR});
                     setToastOpen(true);
                 }
             });
@@ -96,7 +96,7 @@ const Components: React.FC = () => {
 
     return (
         <Stack direction="column" gap={2}>
-            <Toast open={toastOpen} setOpen={setToastOpen} text={errorText} style={ToastStyle.ERROR} />
+            <Toast open={toastOpen} setOpen={setToastOpen} content={toastContent} />
             
             {memoizedTables}
              
@@ -109,9 +109,6 @@ const Components: React.FC = () => {
             <FormControl>
                 {filters.map((f, index) => (
                     <Stack direction="row" gap={1} alignItems="center" key={f.id} sx={{ mb: 1 }}>
-                        {filters.length > 1 && (
-                            <Button color="error" onClick={() => removeFilter(f.id)} sx={{border:1, borderColor: alpha('#aa0000', 0.6)}}>X</Button>
-                        )}
                         <Select size="small" value={f.field} onChange={(e) => updateFilter(f.id, 'field', e.target.value)} sx={{width: 150}}>
                             {columns.map((col)=><MenuItem value={col}>{formatString(col)}</MenuItem>)}
                         </Select>
@@ -132,6 +129,9 @@ const Components: React.FC = () => {
                                 :
                             <Button variant="outlined" onClick={addFilter} sx={{width: '6.5%'}}>+</Button>
                         }
+                        {filters.length > 1 && index === filters.length - 1 && (
+                            <Button color="error" onClick={() => removeFilter(f.id)} sx={{border:1, borderColor: alpha('#aa0000', 0.6)}}>X</Button>
+                        )}
                     </Stack>
                 ))}
             </FormControl>

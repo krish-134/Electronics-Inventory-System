@@ -19,7 +19,6 @@ const DisplayTable: React.FC<DisplayTableProps> = ({ label, data }) => {
         <DataGrid
             label={label}
             sx={{mt:3}}
-            checkboxSelection
             rows={rows}
             columns={columns}
             disableColumnResize
