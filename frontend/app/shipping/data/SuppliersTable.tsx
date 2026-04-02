@@ -53,7 +53,17 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
                     <Stack direction="column" gap={2} sx={{ pt: 1 }}>
                         <Stack direction="row" gap={1}>
                             <TextField {...register('name', { required: 'Name is required' })} sx={{ width: '100%' }} label="Name" variant="outlined" />
-                            <TextField {...register('url', { required: 'URL is required' })} sx={{ width: '100%' }} label="URL" variant="outlined" />
+                            <TextField {...register('url',{ 
+                                            required: 'URL is required', 
+                                            validate: (value) => {
+                                                try {
+                                                    new URL(value)
+                                                    return true
+                                                } catch {
+                                                    return 'Invalid URL'
+                                                }
+                                            }
+                             })} sx={{ width: '100%' }} label="URL" variant="outlined" />
                         </Stack>    
                         <TextField {...register('country', { required: 'Country is required' })} sx={{ width: '100%' }} label="Country" variant="outlined" />
                         <TextField {...register('contact_email', { 
