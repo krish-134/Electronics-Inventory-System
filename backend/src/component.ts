@@ -13,11 +13,22 @@ app.get('/', async c => {
         } catch(e) {}
     }
 
+    // since we do a sql.unsafe below for the operator, we want to make sure that it's proper
+    const ALLOWED_OPERATORS = [
+        '=',
+        '!=',
+        '>',
+        '<',
+        '>=',
+        '<=',
+    ];
+
     let filterQuery = sql``;
     if (parsedFilters.length > 0) {
         filterQuery = parsedFilters.reduce((acc, f, i) => {
             const logical = i === 0 ? sql` AND (` : (parsedFilters[i - 1].connector === 'OR' ? sql` OR ` : sql` AND `);
-            const op = sql.unsafe(` ${f.operator} `);
+            const safeOperator = ALLOWED_OPERATORS.find(ele => ele === f.operator) ? f.operator : "=";
+            const op = sql.unsafe(` ${safeOperator} `);
             
             return sql`${acc} ${logical} ${sql(f.field)} ${op} ${f.value}`;
         }, sql``);
