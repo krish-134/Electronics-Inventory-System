@@ -74,52 +74,59 @@ app.post('/:component_type', async c => {
         supplier_name
     } = body;
 
-    await sql`
-INSERT INTO component (
-    part_num,
-    price,
-    name,
-    package,
-    tolerance,
-    quantity,
-    voltage_rating,
-    additional,
-    position,
-    supplier_name
-    ) VALUES (
-    ${part_num},
-    ${price ?? null},
-    ${name},
-    ${pkg ?? null},
-    ${tolerance ?? null},
-    ${quantity ?? null},
-    ${voltage_rating ?? null},
-    ${additional ?? null},
-    ${position ?? null},
-    ${supplier_name}
-    );`
+    try {
+        await sql`
+            INSERT INTO component (
+            part_num,
+            price,
+            name,
+            package,
+            tolerance,
+            quantity,
+            voltage_rating,
+            additional,
+            position,
+            supplier_name
+            ) VALUES (
+            ${part_num},
+            ${price ?? null},
+            ${name},
+            ${pkg ?? null},
+            ${tolerance ?? null},
+            ${quantity ?? null},
+            ${voltage_rating ?? null},
+            ${additional ?? null},
+            ${position ?? null},
+            ${supplier_name}
+            );`
 
-    switch (component_type) {
-        case "resistor":
-            const { power, resistance, composition } = body
-            await sql`
-            INSERT INTO resistor (part_num, power, resistance, composition) VALUES (${part_num}, ${power ?? null}, ${resistance}, ${composition ?? null});
-            `
-            break
-        case "capacitor": {
-            const { type: res_type, capacitance, temp_coeff } = body
-            await sql`
-            INSERT INTO capacitor (part_num, type, temp_coeff, capacitance) VALUES (${part_num}, ${res_type ?? null}, ${temp_coeff ?? null}, ${capacitance});
-            `
-            break
+            switch (component_type) {
+                case "resistor":
+                    const { power, resistance, composition } = body
+                    await sql`
+                    INSERT INTO resistor (part_num, power, resistance, composition) VALUES (${part_num}, ${power ?? null}, ${resistance}, ${composition ?? null});
+                    `
+                    break
+                case "capacitor": {
+                    const { type: res_type, capacitance, temp_coeff } = body
+                    await sql`
+                    INSERT INTO capacitor (part_num, type, temp_coeff, capacitance) VALUES (${part_num}, ${res_type ?? null}, ${temp_coeff ?? null}, ${capacitance});
+                    `
+                    break
+                }
+                case "diode":
+                    const { vforward, vreverse, capacitance } = body
+                    await sql`
+                    INSERT INTO diode (part_num, vforward, vreverse, dcapacitance) VALUES (${part_num}, ${vforward}, ${vreverse}, ${capacitance ?? null});
+                    `
+                    break
+            }
+        } catch (error: any) {
+            if (error.code === '23505') {
+                return c.json({ error: "A component with this part number already exists." }, 409);
+            }
+            return c.json({ error: "Something went wrong" }, 500);
         }
-        case "diode":
-            const { vforward, vreverse, capacitance } = body
-            await sql`
-            INSERT INTO diode (part_num, vforward, vreverse, dcapacitance) VALUES (${part_num}, ${vforward}, ${vreverse}, ${capacitance ?? null});
-            `
-            break
-    }
 
     return c.json(body, 200)
 })
