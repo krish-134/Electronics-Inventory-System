@@ -70,7 +70,7 @@ const Components: React.FC = () => {
 
     function request() {
         if (filters.some(f => f.field === '' || f.operator === '' || f.value.trim() === '')) {
-            setToastContent({display: "Please fill out all filter fields before searching", level: ToastStyle.ERROR});
+            setToastContent({display: "Please fill out all filter fields before searching!", level: ToastStyle.ERROR});
             setToastOpen(true);
             return;
         }
@@ -95,7 +95,7 @@ const Components: React.FC = () => {
     ////////////////////////////////////
 
     return (
-        <Stack direction="column" gap={2}>
+        <Stack direction="column" gap={2} sx={{width:'100%'}}>
             <Toast open={toastOpen} setOpen={setToastOpen} content={toastContent} />
             
             {memoizedTables}
