@@ -1,10 +1,12 @@
 import type React from "react"
 import Button from "@mui/material/Button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DisplayTable from "../components/DisplayTable";
 import Toast, { ToastInput, ToastStyle } from "../components/Toast";
+import { Divider } from "@mui/material";
 
 const Projects: React.FC = () => {
+    const [data, setData] = useState<object[]>([]);
     const [returned, setReturned] = useState<object[]>([]);
 
     const [toastContent, setToastContent] = useState<ToastInput>();
@@ -23,8 +25,22 @@ const Projects: React.FC = () => {
             .catch(err => console.error(err));
     }
 
+    useEffect(()=>{
+        fetch(`http://localhost:3000/project`)
+            .then(res => res.json())
+            .then(data => {
+                setData(data)
+            })},
+            []
+        )
+
     return (
         <div className="flex flex-col space-y-6 w-full">   
+
+            <DisplayTable data={data} label={"Projects"}/>
+
+            <Divider sx={{my:3}}/>
+
             <Toast open={toastOpen} setOpen={setToastOpen} content={toastContent} />
             
             <p>
