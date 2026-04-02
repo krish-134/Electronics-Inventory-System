@@ -5,10 +5,13 @@ import { Stack, Typography } from "@mui/material"
 
 interface DBTableParams {
     tableName: string
+    keyColumn?: string
+    onDelete?: (keyValue: string) => void
 }
 
-const DBTable: React.FC<DBTableParams> = ({ tableName }) => {
-    const [vals, setVals] = useState<object[]>([])
+const DBTable: React.FC<DBTableParams> = ({ tableName, keyColumn, onDelete}) => {
+    const [vals, setVals] = useState<Record<string, unknown>[]>([])
+
 
     useEffect(() => {
         fetch(`http://localhost:3000/${tableName}/all`)
