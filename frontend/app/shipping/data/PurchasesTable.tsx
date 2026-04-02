@@ -153,7 +153,7 @@ const PurchasesTable: React.FC = () => {
     }, [filterBudget])
     
     const mutateRow = useCallback(async (row, oldRow) => {
-        await fetch(`${localHost}/shipping/purchase/${oldRow.order_num}`, {
+        await fetch(`${localHost}/shipping/purchase/${oldRow.order_number}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(row)
