@@ -15,7 +15,7 @@ import Toast, { ToastInput, ToastStyle } from "../Toast"
 
 const columns: GridColDef[] = [
     {
-        "field": "part_num", headerName: "Part #", editable: true, renderCell: (params) => {
+        "field": "part_num", headerName: "Part #", editable: false, renderCell: (params) => {
             let icon: React.ReactNode = null;
 
             switch (params.row.component_type?.toLowerCase()) {
@@ -65,7 +65,7 @@ const columns: GridColDef[] = [
         )
     },
     {
-        "field": "supplier_name", headerName: "Supplier", editable: true, renderCell: (params) => (
+        "field": "supplier_name", headerName: "Supplier", editable: false, renderCell: (params) => (
             <Link to={`/shipping#supplier-${params.value}`}>
                 {params.formattedValue}
             </Link>

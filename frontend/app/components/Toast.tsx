@@ -34,7 +34,7 @@ const Styles: ReadonlyMap<number, object> = new Map([
 			sx: {
 				bgcolor: alpha('#4caf50', 0.5),
 				backgroundImage: 'none',
-				color: '#4caf50'
+				color: '#00ff00'
 			}
 		}
 	}],
@@ -49,7 +49,7 @@ function Toast({ open, setOpen, content } : {open: any, setOpen: any, content: T
 		open={open}
 		anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
 		slots={{ transition: SlideTransition }}
-		autoHideDuration={2500}
+		autoHideDuration={7500}
 		onClose={() => setOpen(false)}
 		message={content?.display ?? "Something went wrong!"}
 		slotProps={Styles.get(content?.level)}

@@ -185,6 +185,11 @@ const Locations: React.FC = () => {
             method: "PUT",
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ position: toUnplaced ? null : to.position_id })
+        }).then(res=>{
+            if (Math.floor(res.status / 100) == 2) {
+                setToastContent({display: "Successfully moved item!", level: ToastStyle.SUCCESS});
+                setToastOpen(true);
+            }
         })
 
         const item: LocatedItem = { id, type: itemType };
@@ -234,7 +239,10 @@ const Locations: React.FC = () => {
                 setToastContent({display: "Rename your newly created one first!", level: ToastStyle.ERROR});
                 setToastOpen(true);
                 return false;
-            };  
+            } else if (Math.floor(res.status / 100) == 2) {
+                setToastContent({display: "Successfully created a new location!", level: ToastStyle.SUCCESS});
+                setToastOpen(true);
+            }
         })
         switch (loc_type) {
             case "facility":
@@ -284,7 +292,10 @@ const Locations: React.FC = () => {
             setToastContent({display: "A facility with this name already exists", level: ToastStyle.ERROR});
             setToastOpen(true);
             return false;
-        };  
+        } else if (Math.floor(res.status / 100) == 2) {
+            setToastContent({display: "Successfully renamed facility!", level: ToastStyle.SUCCESS});
+            setToastOpen(true);
+        }
 
         setItemLocations(produce(draft => {
             const rebuilt = {};
@@ -308,7 +319,10 @@ const Locations: React.FC = () => {
             setToastContent({display: "A storage with this name already exists", level: ToastStyle.ERROR});
             setToastOpen(true);
             return false;
-        };
+        } else if (Math.floor(res.status / 100) == 2) {
+            setToastContent({display: "Successfully renamed storage!", level: ToastStyle.SUCCESS});
+            setToastOpen(true);
+        }
 
         setItemLocations(produce(draft => {
             const rebuilt = {};
@@ -332,6 +346,9 @@ const Locations: React.FC = () => {
             setToastContent({display: "A position with this name already exists", level: ToastStyle.ERROR});
             setToastOpen(true);
             return false;
+        } else if (Math.floor(res.status / 100) == 2) {
+            setToastContent({display: "Successfully renamed position!", level: ToastStyle.SUCCESS});
+            setToastOpen(true);
         }
 
         setItemLocations(produce(draft => {
@@ -346,11 +363,17 @@ const Locations: React.FC = () => {
     }
 
     const deleteLocation = async (location: Omit<Location, 'position_id'>, loc_type: LocationType) => {
-        await fetch('http://localhost:3000/location/delete', {
+        const res = await fetch('http://localhost:3000/location/delete', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ location, type: loc_type })
         })
+
+        if (res.ok) {
+            setToastContent({display: "Successfully deleted location!", level: ToastStyle.SUCCESS});
+            setToastOpen(true);
+        }
+
         setItemLocations(produce(draft => {
             switch (loc_type) {
                 case "position":
@@ -376,7 +399,13 @@ const Locations: React.FC = () => {
         <DndProvider backend={HTML5Backend}>
             <Toast open={toastOpen} setOpen={setToastOpen} content={toastContent} />
             <Stack direction="row" sx={{ justifyContent: "flex-end", width: "100%" }}>
-                <Button variant="outlined" onClick={() => setEditing(e => !e)} startIcon={editing ? (<Save />) : (<EditIcon />)}>
+                <Button variant="outlined" onClick={() => {
+                        if (editing) {
+                            setToastContent({display: "Successfuly saved locations!", level:ToastStyle.SUCCESS}); 
+                            setToastOpen(true)
+                        }
+                        setEditing(e => !e); 
+                    }} startIcon={editing ? (<Save />) : (<EditIcon />)}>
                     {editing ? "Save" : "Edit" }
                 </Button>
             </Stack>
