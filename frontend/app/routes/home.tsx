@@ -121,7 +121,7 @@ const Home: React.FC = () => {
                                     </Table>
                                 </TableContainer>
                             ) : (
-                                <Typography color="text.secondary" variant="body2">No projects found above ${totalCost.toLocaleString()}.</Typography>
+                                <Typography color="text.secondary" variant="body2" className="truncate">No projects found above ${totalCost.toLocaleString()}.</Typography>
                             )}
                         </Stack>
                     </Grid>
