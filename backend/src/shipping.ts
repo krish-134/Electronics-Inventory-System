@@ -197,7 +197,7 @@ app.put('/purchase/:order_number', async c => {
     const body = await c.req.json()
     const { 
         order_number : new_order_num, 
-        price, 
+        // price, 
         tracking_code, 
         date_placed, 
         delivery_date, 
@@ -207,7 +207,6 @@ app.put('/purchase/:order_number', async c => {
     await sql`
         UPDATE purchase SET
             order_number = ${new_order_num},
-            price = ${price},
             tracking_code = ${tracking_code ?? null},
             date_placed = ${date_placed},
             delivery_date = ${delivery_date ?? null},

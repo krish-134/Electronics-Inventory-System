@@ -187,7 +187,8 @@ CREATE TABLE PurchaseIncludes (
 
     FOREIGN KEY (order_number)
         REFERENCES Purchase(order_number)
-        ON DELETE CASCADE,
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
 
     FOREIGN KEY (part_num)
         REFERENCES Component(part_num)
