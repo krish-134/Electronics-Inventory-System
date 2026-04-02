@@ -66,10 +66,6 @@ function getStyles(name: string, personName: string[], theme: Theme) {
       : theme.typography.fontWeightRegular,
   };
 }
-
-function SlideTransition(props: any) {
-    return <Slide {...props} direction="down" />;
-}
         
 const LocationsPage: React.FC = () => {
     const theme = useTheme();

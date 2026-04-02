@@ -4,7 +4,26 @@ import sql from './db/db'
 const app = new Hono()
 
 app.get('/', async c => {
-    const { type } = c.req.query();
+    const { type, filters } = c.req.query();
+    let parsedFilters: any[] = [];
+    
+    if (filters) {
+        try { 
+            parsedFilters = JSON.parse(filters); 
+        } catch(e) {}
+    }
+
+    let filterQuery = sql``;
+    if (parsedFilters.length > 0) {
+        filterQuery = parsedFilters.reduce((acc, f, i) => {
+            const logical = i === 0 ? sql` AND (` : (parsedFilters[i - 1].connector === 'OR' ? sql` OR ` : sql` AND `);
+            const op = sql.unsafe(` ${f.operator} `);
+            
+            return sql`${acc} ${logical} ${sql(f.field)} ${op} ${f.value}`;
+        }, sql``);
+        
+        filterQuery = sql`${filterQuery} )`;
+    }
 
     const res = await sql`SELECT * FROM (
         SELECT component.*,
@@ -14,14 +33,15 @@ app.get('/', async c => {
             WHEN resistor.part_num IS NOT NULL THEN 'resistor'
             WHEN diode.part_num IS NOT NULL THEN 'diode'
             ELSE NULL END AS component_type
-    FROM component
-    LEFT JOIN capacitor USING (part_num)
-    LEFT JOIN resistor USING (part_num)
-    LEFT JOIN diode USING (part_num)
-    LEFT JOIN position p ON component.position = p.id
-    LEFT JOIN storage s ON p.storage = s.id
-    LEFT JOIN facility f ON s.facility = f.id) sub
-    WHERE (${type ?? null}::text IS NULL OR component_type = ${type ?? null});`
+            FROM component
+            LEFT JOIN capacitor USING (part_num)
+            LEFT JOIN resistor USING (part_num)
+            LEFT JOIN diode USING (part_num)
+            LEFT JOIN position p ON component.position = p.id
+            LEFT JOIN storage s ON p.storage = s.id
+            LEFT JOIN facility f ON s.facility = f.id) sub
+            WHERE (${type ?? null}::text IS NULL OR component_type = ${type ?? null})
+            ${filterQuery};`    
 
     return c.json(res);
 });
@@ -112,7 +132,7 @@ app.put('/:part_num', async c => {
     } = body;
 
     await sql`
-UPDATE component SET
+    UPDATE component SET
     part_num = ${new_part_num},
     price = ${price ?? null},
     name = ${name},
@@ -123,7 +143,7 @@ UPDATE component SET
     additional = ${additional ?? null},
     position = ${position ?? null},
     supplier_name = ${supplier_name ?? null}
-WHERE part_num = ${part_num};`
+    WHERE part_num = ${part_num};`
 
     const { power, resistance, composition } = body
     await sql`

@@ -1,7 +1,7 @@
 import { Slide, Snackbar, alpha } from "@mui/material";
 
 function SlideTransition(props: any) {
-	return <Slide {...props} direction="down" />;
+	return <Slide {...props} direction="up" />;
 }
 
 export enum ToastStyle {
@@ -14,7 +14,7 @@ const Styles: ReadonlyMap<number, object> = new Map([
   [ToastStyle.ERROR, {
 		content: {
 			sx: {
-				bgcolor: alpha('#ef5350', 0.25),
+				bgcolor: alpha('#ef5350', 0.5),
 				backgroundImage: 'none',
 				color: '#ef5350'
 			}
@@ -23,7 +23,7 @@ const Styles: ReadonlyMap<number, object> = new Map([
   [ToastStyle.WARNING, {
 		content: {
 			sx: {
-				bgcolor: alpha('#ffef62', 0.25),
+				bgcolor: alpha('#ffef62', 0.5),
 				backgroundImage: 'none',
 				color: '#ffef62'
 			}
@@ -32,7 +32,7 @@ const Styles: ReadonlyMap<number, object> = new Map([
   [ToastStyle.SUCCESS, {
 		content: {
 			sx: {
-				bgcolor: alpha('#4caf50', 0.25),
+				bgcolor: alpha('#4caf50', 0.5),
 				backgroundImage: 'none',
 				color: '#4caf50'
 			}
@@ -43,7 +43,7 @@ const Styles: ReadonlyMap<number, object> = new Map([
 function Toast({ open, setOpen, text, style } : {open: any, setOpen: any, text: string | undefined, style: ToastStyle}) : React.JSX.Element {
 	return <Snackbar
 		open={open}
-		anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+		anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
 		slots={{ transition: SlideTransition }}
 		autoHideDuration={2500}
 		onClose={() => setOpen(false)}
