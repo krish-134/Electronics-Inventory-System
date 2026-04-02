@@ -30,11 +30,11 @@ app.get('/expensive-projects', async c => {
 
     if (cost == undefined) return c.text("Cost is undefined", 400)
 
-    const res = await sql`SELECT p.name as name, SUM(c.price * CAST(i.quantity AS DECIMAL)) AS total_cost
+    const res = await sql`SELECT p.name as name, SUM(c.price * i.quantity) AS total_cost
     FROM project p JOIN includes i on p.name = i.project_name
     JOIN component c ON i.component_part_num = c.part_num
     GROUP BY p.name
-    HAVING SUM(c.price * CAST(i.quantity AS DECIMAL)) > ${cost}`
+    HAVING SUM(c.price * i.quantity) > ${cost}`
 
     const resp = res.map((c: { name: string, total_cost: string }) => ({ name: c.name, total_cost: parseFloat(c.total_cost)}))
 
