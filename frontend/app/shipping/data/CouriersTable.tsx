@@ -87,7 +87,7 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
 }
 
 const CouriersTable: React.FC = () => {
-    const [toastContent, setToastContent] = useState<ToastInput>();
+    const [toastContent, showToast] = useState<ToastInput>();
     const [toastOpen, setToastOpen] = useState<boolean>(false);
 
     const getData = useCallback(async () => {
@@ -117,15 +117,15 @@ const CouriersTable: React.FC = () => {
 
         const failed = results.filter(r => !r.ok)
         if (failed.length > 0) {
-            setToastContent({display:failed.map(f => f.body.error).join('\n'), level: ToastStyle.ERROR});
-            setToastOpen(true);
+            showToast({display:failed.map(f => f.body.error).join('\n'), level: ToastStyle.ERROR});
+             ;
         }
     }
 
 
     return (
         <Stack direction="column" sx={{ width: '100%' }}>
-            <Toast open={toastOpen} setOpen={setToastOpen} content={toastContent} />
+             
             <Typography component="h2" variant="h6">
                 Couriers
             </Typography>

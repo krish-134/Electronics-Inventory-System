@@ -44,7 +44,7 @@ const Components: React.FC = () => {
     const getCapacitors = useCallback(async () => data?.filter(d => d.component_type == "capacitor"), [data])
     const getDiodes = useCallback(async () => data?.filter(d => d.component_type == "diode"), [data])
 
-    const [toastContent, setToastContent] = useState<ToastInput>();
+    const [toastContent, showToast] = useState<ToastInput>();
     const [toastOpen, setToastOpen] = useState<boolean>(false);
 
     // was triggering on every refresh, so memoize it
@@ -70,8 +70,8 @@ const Components: React.FC = () => {
 
     function request() {
         if (filters.some(f => f.field === '' || f.operator === '' || f.value.trim() === '')) {
-            setToastContent({display: "Please fill out all filter fields before searching!", level: ToastStyle.ERROR});
-            setToastOpen(true);
+            showToast({display: "Please fill out all filter fields before searching!", level: ToastStyle.ERROR});
+             ;
             return;
         }
         
@@ -87,8 +87,8 @@ const Components: React.FC = () => {
             .then(data => {
                 setSelectionReturned(data);
                 if (!data.length) {
-                    setToastContent({display: "No results found with these restrictions!", level: ToastStyle.ERROR});
-                    setToastOpen(true);
+                    showToast({display: "No results found with these restrictions!", level: ToastStyle.ERROR});
+                     ;
                 }
             });
     }
@@ -96,7 +96,7 @@ const Components: React.FC = () => {
 
     return (
         <Stack direction="column" gap={2} sx={{width:'100%'}}>
-            <Toast open={toastOpen} setOpen={setToastOpen} content={toastContent} />
+             
             
             {memoizedTables}
              

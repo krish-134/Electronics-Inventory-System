@@ -5,6 +5,7 @@ import { IconCircuitDiode } from '@tabler/icons-react'
 import CustomTable, { CustomTableProps } from "../CustomTable"
 import { useCallback, useState } from "react"
 import Toast, { ToastInput, ToastStyle } from "../Toast"
+import { useToast } from "../../ToastProvider"
 
 const columns: GridColDef[] = [
     {
@@ -21,8 +22,7 @@ const columns: GridColDef[] = [
 ]
 
 const DiodeTable: React.FC<Pick<CustomTableProps, "getData">> = ({ getData }) => {
-    const [toastContent, setToastContent] = useState<ToastInput>();
-    const [toastOpen, setToastOpen] = useState<boolean>(false);
+    const { showToast } = useToast();
 
     const mutateRow = useCallback(async (row, oldRow) => {
         await fetch(`http://localhost:3000/component/${oldRow.part_num}`, { method: "PUT", body: JSON.stringify(row) });
@@ -40,14 +40,12 @@ const DiodeTable: React.FC<Pick<CustomTableProps, "getData">> = ({ getData }) =>
 
         const failed = results.filter(r => !r.ok)
         if (failed.length > 0) {
-            setToastContent({display:failed.map(f => f.body.error).join('\n'), level: ToastStyle.ERROR});
-            setToastOpen(true);
+            showToast({display:failed.map(f => f.body.error).join('\n'), level: ToastStyle.ERROR});
         }
     }
 
     return (
         <Stack direction="column">
-            <Toast open={toastOpen} setOpen={setToastOpen} content={toastContent} />
             <Typography component="h2" variant="h6">
                 Diodes
             </Typography>

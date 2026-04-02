@@ -8,6 +8,7 @@ import { DndProvider, useDrag, useDrop } from 'react-dnd'
 import { HTML5Backend } from 'react-dnd-html5-backend'
 import { produce } from 'immer';
 import Toast, { ToastInput, ToastStyle } from "../Toast"
+import { useToast } from "../../ToastProvider"
 
 type ItemProps = {
     id: string
@@ -135,8 +136,7 @@ const Locations: React.FC = () => {
         }
     }>({})
 
-    const [toastContent, setToastContent] = useState<ToastInput>();
-    const [toastOpen, setToastOpen] = useState<boolean>(false);
+    const { showToast } = useToast();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -187,8 +187,7 @@ const Locations: React.FC = () => {
             body: JSON.stringify({ position: toUnplaced ? null : to.position_id })
         }).then(res=>{
             if (Math.floor(res.status / 100) == 2) {
-                setToastContent({display: "Successfully moved item!", level: ToastStyle.SUCCESS});
-                setToastOpen(true);
+                showToast({display: "Successfully moved item!", level: ToastStyle.SUCCESS});
             }
         })
 
@@ -236,12 +235,12 @@ const Locations: React.FC = () => {
             body: JSON.stringify({ location, type: loc_type })
         }).then(res=>{
             if (res.status == 409) {
-                setToastContent({display: "Rename your newly created one first!", level: ToastStyle.ERROR});
-                setToastOpen(true);
+                showToast({display: "Rename your newly created one first!", level: ToastStyle.ERROR});
+                 
                 return false;
             } else if (Math.floor(res.status / 100) == 2) {
-                setToastContent({display: "Successfully created a new location!", level: ToastStyle.SUCCESS});
-                setToastOpen(true);
+                showToast({display: "Successfully created a new location!", level: ToastStyle.SUCCESS});
+                 
             }
         })
         switch (loc_type) {
@@ -289,12 +288,12 @@ const Locations: React.FC = () => {
         })
         
         if (res.status == 409) {
-            setToastContent({display: "A facility with this name already exists", level: ToastStyle.ERROR});
-            setToastOpen(true);
+            showToast({display: "A facility with this name already exists", level: ToastStyle.ERROR});
+             
             return false;
         } else if (Math.floor(res.status / 100) == 2) {
-            setToastContent({display: "Successfully renamed facility!", level: ToastStyle.SUCCESS});
-            setToastOpen(true);
+            showToast({display: "Successfully renamed facility!", level: ToastStyle.SUCCESS});
+             
         }
 
         setItemLocations(produce(draft => {
@@ -316,12 +315,12 @@ const Locations: React.FC = () => {
         })
 
         if (res.status == 409) {
-            setToastContent({display: "A storage with this name already exists", level: ToastStyle.ERROR});
-            setToastOpen(true);
+            showToast({display: "A storage with this name already exists", level: ToastStyle.ERROR});
+             
             return false;
         } else if (Math.floor(res.status / 100) == 2) {
-            setToastContent({display: "Successfully renamed storage!", level: ToastStyle.SUCCESS});
-            setToastOpen(true);
+            showToast({display: "Successfully renamed storage!", level: ToastStyle.SUCCESS});
+             
         }
 
         setItemLocations(produce(draft => {
@@ -343,12 +342,12 @@ const Locations: React.FC = () => {
         })
 
         if (res.status == 409) {
-            setToastContent({display: "A position with this name already exists", level: ToastStyle.ERROR});
-            setToastOpen(true);
+            showToast({display: "A position with this name already exists", level: ToastStyle.ERROR});
+             
             return false;
         } else if (Math.floor(res.status / 100) == 2) {
-            setToastContent({display: "Successfully renamed position!", level: ToastStyle.SUCCESS});
-            setToastOpen(true);
+            showToast({display: "Successfully renamed position!", level: ToastStyle.SUCCESS});
+             
         }
 
         setItemLocations(produce(draft => {
@@ -370,8 +369,8 @@ const Locations: React.FC = () => {
         })
 
         if (res.ok) {
-            setToastContent({display: "Successfully deleted location!", level: ToastStyle.SUCCESS});
-            setToastOpen(true);
+            showToast({display: "Successfully deleted location!", level: ToastStyle.SUCCESS});
+             
         }
 
         setItemLocations(produce(draft => {
@@ -397,12 +396,11 @@ const Locations: React.FC = () => {
 
     return (
         <DndProvider backend={HTML5Backend}>
-            <Toast open={toastOpen} setOpen={setToastOpen} content={toastContent} />
+             
             <Stack direction="row" sx={{ justifyContent: "flex-end", width: "100%" }}>
                 <Button variant="outlined" onClick={() => {
                         if (editing) {
-                            setToastContent({display: "Successfuly saved locations!", level:ToastStyle.SUCCESS}); 
-                            setToastOpen(true)
+                            showToast({display: "Successfuly saved locations!", level:ToastStyle.SUCCESS}); 
                         }
                         setEditing(e => !e); 
                     }} startIcon={editing ? (<Save />) : (<EditIcon />)}>
