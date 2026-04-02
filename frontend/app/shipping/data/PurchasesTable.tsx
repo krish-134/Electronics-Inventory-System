@@ -11,6 +11,28 @@ import { Supplier, Courier } from "../../types"
 const localHost = `http://localhost:3000`
 
 
+
+const columns: GridColDef[] = [
+    { field: "order_number",  headerName: "Order #",       editable: true, flex: 0.5 },
+    { field: "price",         headerName: "Price",         editable: true, flex: 0.5 },
+    { field: "tracking_code", headerName: "Tracking Code", editable: true, flex: 0.6 },
+    { field: "date_placed",   headerName: "Date Placed",   editable: true, flex: 1 },
+    { field: "delivery_date", headerName: "Delivery Date", editable: true, flex: 1 },   
+    {  
+        field: "supplier", headerName: "Supplier", editable: true,
+        renderCell: (params) => (
+            <Link to={`/shipping#supplier-${params.value}`}>{params.formattedValue}</Link>
+        )
+    },
+    {
+        field: "courier", headerName: "Courier", editable: true, flex: 1,
+        renderCell: (params) => (
+            <Link to={`/shipping#courier-${params.value}`}>{params.formattedValue}</Link>
+        )
+    },
+]
+
+
 const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => {
     const [supplierOptions, setSupplierOptions] = useState<Supplier[]>([])
     const [courierOptions, setCourierOptions] = useState<Courier[]>([])
@@ -123,30 +145,6 @@ const PurchasesTable: React.FC = () => {
     const [budget, setBudget] = useState<string>("")
     const [filterBudget, setFilterBudget] = useState<number | null>(null)
 
-
-    
-    const columns: GridColDef[] = [
-        
-        ...(filterBudget ? [{ field: "component_total", headerName: "Component Cost", flex: 0.6 }]: []),
-        { field: "order_number",  headerName: "Order #",       editable: true, flex: 0.5 },
-        { field: "price",         headerName: "Price",         editable: true, flex: 0.5 },
-        { field: "tracking_code", headerName: "Tracking Code", editable: true, flex: 0.6 },
-        { field: "date_placed",   headerName: "Date Placed",   editable: true, flex: 1 },
-        { field: "delivery_date", headerName: "Delivery Date", editable: true, flex: 1 },   
-        {  
-            field: "supplier", headerName: "Supplier", editable: true,
-            renderCell: (params) => (
-                <Link to={`/shipping#supplier-${params.value}`}>{params.formattedValue}</Link>
-            )
-        },
-        {
-            field: "courier", headerName: "Courier", editable: true, flex: 1,
-            renderCell: (params) => (
-                <Link to={`/shipping#courier-${params.value}`}>{params.formattedValue}</Link>
-            )
-        },
-    ]
-
     const getData = useCallback(async () => {
         const url = filterBudget !== null
             ? `${localHost}/shipping/purchase?budget=${filterBudget}`
@@ -209,6 +207,7 @@ const PurchasesTable: React.FC = () => {
                         Filter
                     </Button>
                     <TextField
+                        // onBlur={}
                         label="Budget (component cost)"
                         value={budget}
                         onChange={e => setBudget(e.target.value)}
