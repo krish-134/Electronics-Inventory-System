@@ -222,16 +222,7 @@ const PurchasesTable: React.FC = () => {
                             Showing purchases with component cost under ${filterBudget}
                         </Typography>
                     )}
-                    {/* {filterBudget !== null && (
-                        <Button variant="outlined" size="small" color="warning" onClick={handleClear}>
-                            Clear
-                        </Button>
-                    )}
-                    <Button variant="outlined" size="small" onClick={handleFilter}>
-                        Filter
-                    </Button> */}
                     <TextField
-                        // onBlur={}
                         label="Budget (component cost)"
                         value={budget}
                         onChange={e => setBudget(e.target.value)}
