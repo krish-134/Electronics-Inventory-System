@@ -166,24 +166,6 @@ app.put('/:part_num', async c => {
     supplier_name = ${supplier_name ?? null}
     WHERE part_num = ${part_num};`
 
-
-
-
-    // const { power, resistance, composition } = body
-    // await sql`
-    // UPDATE resistor SET power=${power ?? null}, resistance=${resistance}, composition=${composition ?? null} WHERE part_num=${new_part_num};
-    // `
-
-    // const { type: res_type, capacitance, temp_coeff } = body
-    // await sql`
-    // UPDATE capacitor SET type=${res_type ?? null}, temp_coeff=${temp_coeff ?? null}, capacitance=${capacitance} WHERE part_num=${new_part_num};
-    // `
-
-    // const { vforward, vreverse, capacitance: diode_capacitance } = body
-    // await sql`
-    // UPDATE diode SET vforward=${vforward}, vreverse=${vreverse}, dcapacitance=${diode_capacitance ?? null} WHERE part_num=${new_part_num};
-    // `
-
     const component_type = body
     switch (component_type) {
         case "resistor":
