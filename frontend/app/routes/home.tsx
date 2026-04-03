@@ -57,7 +57,7 @@ const Home: React.FC = () => {
 
     return (
         <>
-            <Stack direction="column" gap={1}>
+            <Stack direction="column" gap={1} sx={{width:'100%'}}>
                 <Typography component="h2" variant="h6">Insights</Typography>
                 <Grid container spacing={2} sx={{ justifyContent: "center" }}>
                     <ChartCell>
@@ -121,7 +121,7 @@ const Home: React.FC = () => {
                                     </Table>
                                 </TableContainer>
                             ) : (
-                                <Typography color="text.secondary" variant="body2">No projects found above ${totalCost.toLocaleString()}.</Typography>
+                                <Typography color="text.secondary" variant="body2" className="truncate">No projects found above ${totalCost.toLocaleString()}.</Typography>
                             )}
                         </Stack>
                     </Grid>

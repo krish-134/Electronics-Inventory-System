@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { useLocation } from "react-router"
 import CustomToolbar from "./data/CustomToolbar"
 import { GlobalStyles, Modal, Stack } from "@mui/material"
+import Toast, { ToastInput, ToastStyle } from "./Toast"
+import { useToast } from "../ToastProvider"
 
 type Rows = readonly any[]
 
@@ -29,6 +31,8 @@ const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns, AddC
     const location = useLocation()
     const hasScrolled = useRef(false)
 
+    const { showToast } = useToast();
+
     useEffect(() => {
         getData().then(setRows)
     }, [])
@@ -51,19 +55,20 @@ const CustomTable: React.FC<CustomTableProps> = ({ label, getData, columns, AddC
     }
 
     const handleAdd = (r: Rows) => {
-        setRows(oldRows => [...(oldRows ?? []), { id: rows?.length, ...r }])
-    }
+        setRows(oldRows => [...(oldRows ?? []), { id: rows?.length, ...r }]);
+        showToast({ display: "Successfully added item!", level: ToastStyle.SUCCESS });
+    };
 
     const processUpdate = useCallback(async (newRow: any, oldRow: any) => {
         const response = await mutateRow(newRow, oldRow);
-        // TODO: better feedback
+        if (JSON.stringify(oldRow) !== JSON.stringify(newRow)){
+            showToast({ display: "Successfully updated item!", level: ToastStyle.SUCCESS });
+        }
         return response;
     }, [mutateRow])
 
-    const handleProcessRowUpdateError = useCallback(err => {
-        // TODO: better feedback
-        // alert(err)
-        console.error(err)
+    const handleProcessRowUpdateError = useCallback((err: any) => {
+        showToast({ display: err.message, level: ToastStyle.ERROR });
     }, []);
 
     return (

@@ -7,7 +7,7 @@ import { Stack } from "@mui/material"
 const Shipping: React.FC = () => {
     return (
         // <>shipping</>
-        <Stack direction="column" gap={2}>
+        <Stack direction="column" gap={2} sx={{width:'100%'}}>
             <PurchasesTable />
             <SuppliersTable />
             <CouriersTable />

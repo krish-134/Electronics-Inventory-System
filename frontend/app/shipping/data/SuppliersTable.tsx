@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button, Card, CardContent, CardActions, Grid, Stack, Typography, TextField } from "@mui/material"
 import { useCallback } from "react"
 import { type GridColDef } from "@mui/x-data-grid"
@@ -6,6 +6,8 @@ import CustomTable, { AddCardProps } from "../CustomTable"
 import { ErrorMessage } from "@hookform/error-message"
 import { useForm, Controller } from "react-hook-form"
 import { ErrorOutline } from "@mui/icons-material"
+import Toast, { ToastInput, ToastStyle } from "../../components/Toast";
+import { useToast } from "../../ToastProvider";
 
 const localHost = `http://localhost:3000`
 
@@ -17,8 +19,9 @@ const columns: GridColDef[] = [
 ]
 
 const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => {
-    const { handleSubmit, register, control, formState: { errors } } = useForm();
+    const { showToast } = useToast();
 
+    const { handleSubmit, register, control, formState: { errors } } = useForm();
     
     const generateErrorMessage = (name: string) => (
         <ErrorMessage errors={errors} name={name} render={({ message }) => (
@@ -39,7 +42,10 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
         }).then(res => {
             if (Math.floor(res.status / 100) === 2) {
                 setModalOpen(false)
+                showToast({display: "Successfully created a new supplier!", level: ToastStyle.SUCCESS});
                 handleAdd(data)
+            } else if (res.status == 409) {
+                showToast({display: "A supplier with this name already exists", level: ToastStyle.ERROR});
             }
         })
     }
@@ -88,6 +94,8 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
 }
 
 const SuppliersTable: React.FC = () => {
+    const { showToast } = useToast();
+
     const getData = useCallback(async () => {
         return await fetch(`${localHost}/shipping/supplier`)
             .then(res => res.json())
@@ -95,11 +103,21 @@ const SuppliersTable: React.FC = () => {
     }, [])
 
     const mutateRow = useCallback(async (row, oldRow) => {
-        await fetch(`${localHost}/shipping/supplier/${oldRow.name}`, {
+        const res = await fetch(`${localHost}/shipping/supplier/${oldRow.name}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'applicatoins/json' },
             body: JSON.stringify(row)
         })
+
+        if (JSON.stringify(row) !== JSON.stringify(oldRow)) {
+            if (!res.ok) {
+                showToast({display: "Input is invalid!", level: ToastStyle.ERROR});
+                return oldRow;
+            } else {
+                showToast({display: "Successfully edited item!", level: ToastStyle.SUCCESS});
+            }
+        }
+
         return row
     }, [])
     
@@ -113,12 +131,15 @@ const SuppliersTable: React.FC = () => {
 
         const failed = results.filter(r => !r.ok)
         if (failed.length > 0) {
-            alert(failed.map(f => f.body.error).join('\n'))
+            showToast({display:failed.map(f => f.body.error).join('\n'), level: ToastStyle.ERROR});
+        } else {
+            showToast({display:"Successfully deleted item(s)!", level: ToastStyle.SUCCESS});
         }
     }
 
     return (
         <Stack direction="column" sx={{ width: '100%' }}>
+             
             <Typography component="h2" variant="h6">
                 Suppliers
             </Typography>

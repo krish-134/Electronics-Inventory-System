@@ -1,16 +1,17 @@
 import type React from "react"
 import Locations from "../components/data/Locations"
 import { useEffect, useState } from "react"
-import { Theme, useTheme } from '@mui/material/styles';
+import { alpha, Theme, useTheme } from '@mui/material/styles';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import Button from "@mui/material/Button";
-import { Box, Chip, Divider, TextField } from "@mui/material";
+import { Box, Chip, Divider, Slide, Snackbar, TextField } from "@mui/material";
 import DisplayTable from "../components/DisplayTable";
-
+import Toast, { ToastInput, ToastStyle } from "../components/Toast";
+import { useToast } from "../ToastProvider";
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
 const MenuProps = {
@@ -65,15 +66,16 @@ function getStyles(name: string, personName: string[], theme: Theme) {
       : theme.typography.fontWeightRegular,
   };
 }
-
+        
 const LocationsPage: React.FC = () => {
     const theme = useTheme();
     const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
     const [selectedOperator, setSelectedOperator] = useState<string>("");
     const [selectedAttribute, setSelectedAttribute] = useState<string>("");
-    const [queriedValue, setQueriedValue] = useState<number>();
+    const [queriedValue, setQueriedValue] = useState<number>(0);
 
-    const [errorText, setErrorText] = useState<string>();
+    const { showToast } = useToast();
+    const [invalidFields, setInvalidFields] = useState<boolean[]>([false, false, false]);
 
     const [returned, setReturned] = useState<object[]>([]);
 
@@ -85,15 +87,26 @@ const LocationsPage: React.FC = () => {
 
     function request() {
         if (!selectedAttribute || !selectedOperator || selectedColumns.length <= 0) {
-            setErrorText("Missing required fields!");
+            showToast({display: "Missing required fields!", level: ToastStyle.ERROR});
+            setInvalidFields([
+                !selectedAttribute,
+                !selectedOperator,
+                selectedColumns.length <= 0
+            ]);
             return;
         };
+
+        setInvalidFields([false, false, false]);
 
         const queryParams = `?fields=${selectedColumns.join(',')}&atr=${selectedAttribute}&op=${selectedOperator}&val=${queriedValue}`;
         fetch(`http://localhost:3000/location${queryParams}`)
             .then(res => res.json())
-            .then(data => setReturned(data))
-            .then(_ => {if (!returned.length) setErrorText("No results found with these restrictions!")})
+            .then(data => {
+                setReturned(data);
+                if (!data.length) {
+                    showToast({display: "No results found with these restrictions!", level: ToastStyle.ERROR});
+                }
+            })
             .catch(err => console.error(err));
     }
 
@@ -108,7 +121,7 @@ const LocationsPage: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col my-3 space-y-6 pt-9 w-full">
+        <div className="flex flex-col space-y-6 w-full">
             <Locations />
 
             <Divider sx={{ my: 3 }}/>
@@ -127,6 +140,7 @@ const LocationsPage: React.FC = () => {
                         label="Attribute"
                         onChange={e => setSelectedAttribute(e.target.value)}
                         sx={{ width: 200, mr: 2 }}
+                        error={invalidFields[0]}
                     >
                         {attributes.map(atr => <MenuItem key={atr} value={atr}>{formatString(atr)}</MenuItem>)}
                     </Select>
@@ -141,6 +155,7 @@ const LocationsPage: React.FC = () => {
                         label="Operator"
                         onChange={e => setSelectedOperator(e.target.value)}
                         sx={{ width: 115, mr: 2 }}
+                        error={invalidFields[1]}
                     >
                         {operators.map(op => <MenuItem key={op.value} value={op.value}>{op.display}</MenuItem>)}
                     </Select>
@@ -172,6 +187,7 @@ const LocationsPage: React.FC = () => {
                     value={selectedColumns}
                     onChange={handleColumnSelect}
                     input={<OutlinedInput label="Columns" />}
+                    error={invalidFields[2]}
                     renderValue={(selected) => (
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                         {selected.map((value) => (
@@ -195,12 +211,8 @@ const LocationsPage: React.FC = () => {
 
             <Button onClick={request} sx={{ justifySelf: "left", width: 200, border: 1, mb: 1}}>Find my parts!</Button>
 
-            {returned.length > 0 ?
+            {returned.length > 0 &&
                 <DisplayTable label={"Locations"} data={returned}/>
-                :
-                <p className="text-red-400 pt-3">
-                    {errorText}
-                </p>
             }
         </div>
     )
