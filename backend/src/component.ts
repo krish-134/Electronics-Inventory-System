@@ -4,7 +4,37 @@ import sql from './db/db'
 const app = new Hono()
 
 app.get('/', async c => {
-    const { type } = c.req.query();
+    const { type, filters } = c.req.query();
+    let parsedFilters: any[] = [];
+    
+    if (filters) {
+        try { 
+            parsedFilters = JSON.parse(filters); 
+        } catch(e) {}
+    }
+
+    // since we do a sql.unsafe below for the operator, we want to make sure that it's proper
+    const ALLOWED_OPERATORS = [
+        '=',
+        '!=',
+        '>',
+        '<',
+        '>=',
+        '<=',
+    ];
+
+    let filterQuery = sql``;
+    if (parsedFilters.length > 0) {
+        filterQuery = parsedFilters.reduce((acc, f, i) => {
+            const logical = i === 0 ? sql` AND (` : (parsedFilters[i - 1].connector === 'OR' ? sql` OR ` : sql` AND `);
+            const safeOperator = ALLOWED_OPERATORS.find(ele => ele === f.operator) ? f.operator : "=";
+            const op = sql.unsafe(` ${safeOperator} `);
+            
+            return sql`${acc} ${logical} ${sql(f.field)} ${op} ${f.value}`;
+        }, sql``);
+        
+        filterQuery = sql`${filterQuery} )`;
+    }
 
     const res = await sql`SELECT * FROM (
         SELECT component.*,
@@ -17,14 +47,15 @@ app.get('/', async c => {
             WHEN resistor.part_num IS NOT NULL THEN 'resistor'
             WHEN diode.part_num IS NOT NULL THEN 'diode'
             ELSE NULL END AS component_type
-    FROM component
-    LEFT JOIN capacitor USING (part_num)
-    LEFT JOIN resistor USING (part_num)
-    LEFT JOIN diode USING (part_num)
-    LEFT JOIN position p ON component.position = p.id
-    LEFT JOIN storage s ON p.storage = s.id
-    LEFT JOIN facility f ON s.facility = f.id) sub
-    WHERE (${type ?? null}::text IS NULL OR component_type = ${type ?? null});`
+            FROM component
+            LEFT JOIN capacitor USING (part_num)
+            LEFT JOIN resistor USING (part_num)
+            LEFT JOIN diode USING (part_num)
+            LEFT JOIN position p ON component.position = p.id
+            LEFT JOIN storage s ON p.storage = s.id
+            LEFT JOIN facility f ON s.facility = f.id) sub
+            WHERE (${type ?? null}::text IS NULL OR component_type = ${type ?? null})
+            ${filterQuery};`    
 
     return c.json(res);
 });
@@ -46,52 +77,59 @@ app.post('/:component_type', async c => {
         supplier_name
     } = body;
 
-    await sql`
-INSERT INTO component (
-    part_num,
-    price,
-    name,
-    package,
-    tolerance,
-    quantity,
-    voltage_rating,
-    additional,
-    position,
-    supplier_name
-    ) VALUES (
-    ${part_num},
-    ${price ?? null},
-    ${name},
-    ${pkg ?? null},
-    ${tolerance ?? null},
-    ${quantity ?? null},
-    ${voltage_rating ?? null},
-    ${additional ?? null},
-    ${position ?? null},
-    ${supplier_name}
-    );`
+    try {
+        await sql`
+            INSERT INTO component (
+            part_num,
+            price,
+            name,
+            package,
+            tolerance,
+            quantity,
+            voltage_rating,
+            additional,
+            position,
+            supplier_name
+            ) VALUES (
+            ${part_num},
+            ${price ?? null},
+            ${name},
+            ${pkg ?? null},
+            ${tolerance ?? null},
+            ${quantity ?? null},
+            ${voltage_rating ?? null},
+            ${additional ?? null},
+            ${position ?? null},
+            ${supplier_name}
+            );`
 
-    switch (component_type) {
-        case "resistor":
-            const { power, resistance, composition } = body
-            await sql`
-            INSERT INTO resistor (part_num, power, resistance, composition) VALUES (${part_num}, ${power ?? null}, ${resistance}, ${composition ?? null});
-            `
-            break
-        case "capacitor": {
-            const { type: res_type, capacitance, temp_coeff } = body
-            await sql`
-            INSERT INTO capacitor (part_num, type, temp_coeff, capacitance) VALUES (${part_num}, ${res_type ?? null}, ${temp_coeff ?? null}, ${capacitance});
-            `
-            break
+            switch (component_type) {
+                case "resistor":
+                    const { power, resistance, composition } = body
+                    await sql`
+                    INSERT INTO resistor (part_num, power, resistance, composition) VALUES (${part_num}, ${power ?? null}, ${resistance}, ${composition ?? null});
+                    `
+                    break
+                case "capacitor": {
+                    const { type: res_type, capacitance, temp_coeff } = body
+                    await sql`
+                    INSERT INTO capacitor (part_num, type, temp_coeff, capacitance) VALUES (${part_num}, ${res_type ?? null}, ${temp_coeff ?? null}, ${capacitance});
+                    `
+                    break
+                }
+                case "diode":
+                    const { vforward, vreverse, capacitance } = body
+                    await sql`
+                    INSERT INTO diode (part_num, vforward, vreverse, dcapacitance) VALUES (${part_num}, ${vforward}, ${vreverse}, ${capacitance ?? null});
+                    `
+                    break
+            }
+        } catch (error: any) {
+            if (error.code === '23505') {
+                return c.json({ error: "A component with this part number already exists" }, 409);
+            }
+            return c.json({ error: "Something went wrong" }, 500);
         }
-        case "diode":
-            const { vforward, vreverse, capacitance } = body
-            await sql`
-            INSERT INTO diode (part_num, vforward, vreverse, dcapacitance) VALUES (${part_num}, ${vforward}, ${vreverse}, ${capacitance ?? null});
-            `
-            break
-    }
 
     return c.json(body, 200)
 })
@@ -115,7 +153,7 @@ app.put('/:part_num', async c => {
     } = body;
 
     await sql`
-UPDATE component SET
+    UPDATE component SET
     part_num = ${new_part_num},
     price = ${price ?? null},
     name = ${name},
@@ -126,7 +164,7 @@ UPDATE component SET
     additional = ${additional ?? null},
     position = ${position ?? null},
     supplier_name = ${supplier_name ?? null}
-WHERE part_num = ${part_num};`
+    WHERE part_num = ${part_num};`
 
 
 

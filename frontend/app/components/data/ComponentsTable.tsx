@@ -11,10 +11,12 @@ import JsonViewComponent from "../JsonViewComponent"
 import { ErrorOutline, Inventory, Store } from "@mui/icons-material"
 import { useForm, Controller, Validate, FieldValues, FieldValue, ValidateResult } from 'react-hook-form'
 import { ErrorMessage } from '@hookform/error-message'
+import Toast, { ToastInput, ToastStyle } from "../Toast"
+import { useToast } from "../../ToastProvider"
 
 const columns: GridColDef[] = [
     {
-        "field": "part_num", headerName: "Part #", editable: true, renderCell: (params) => {
+        "field": "part_num", headerName: "Part #", editable: false, renderCell: (params) => {
             let icon: React.ReactNode = null;
 
             switch (params.row.component_type?.toLowerCase()) {
@@ -64,7 +66,7 @@ const columns: GridColDef[] = [
         )
     },
     {
-        "field": "supplier_name", headerName: "Supplier", editable: true, renderCell: (params) => (
+        "field": "supplier_name", headerName: "Supplier", editable: false, renderCell: (params) => (
             <Link to={`/shipping#supplier-${params.value}`}>
                 {params.formattedValue}
             </Link>
@@ -76,6 +78,8 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
     const [storageOptions, setStorageOptions] = useState<Location[]>([])
     const [supplierOptions, setSupplierOptions] = useState<Supplier[]>([])
     const [componentType, setComponentType] = useState<string>("");
+
+    const { showToast } = useToast();
 
     const { handleSubmit, control, register, formState: { errors } } = useForm()
 
@@ -100,6 +104,7 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
             JSON.parse(value);
             return undefined;
         } catch (e) {
+            showToast({display: "Invalid JSON input!", level: ToastStyle.ERROR})
             return "Invalid JSON in Additional Data"
         }
     }
@@ -154,8 +159,10 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
             if (Math.floor(res.status / 100) == 2) {
                 setModalOpen(false)
                 handleAdd(newRow)
+            } else if (res.status == 409) {
+                showToast({display: "A component with this part number already exists", level: ToastStyle.ERROR});
             }
-        })
+        });
     }
 
     const generateErrorMessage = (name: string) => {
@@ -180,7 +187,7 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
     }
 
     return (
-        <Card variant="outlined" sx={{ bgcolor: 'background.paper', width: '50%', minWidth: '600px', maxWidth: '1000px' }}>
+        <Card variant="outlined" sx={{ bgcolor: 'background.paper', width: '50%', minWidth: '600px', maxWidth: '1000px', maxHeight: '90vh', overflowY: 'auto' }}>
             <form onSubmit={handleSubmit(onSubmit)}>
                 <CardContent>
                     <Typography variant="h3">{label}</Typography>
@@ -295,6 +302,8 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
 }
 
 const ComponentsTable: React.FC<Pick<CustomTableProps, "getData">> = ({ getData }) => {
+    const { showToast } = useToast();
+
     const mutateRow = useCallback(async (row, oldRow) => {
         await fetch(`http://localhost:3000/component/${oldRow.part_num}`, { method: "PUT", body: JSON.stringify(row) });
         return row
@@ -310,7 +319,9 @@ const ComponentsTable: React.FC<Pick<CustomTableProps, "getData">> = ({ getData 
 
         const failed = results.filter(r => !r.ok)
         if (failed.length > 0) {
-            alert(failed.map(f => f.body.error).join('\n'))
+            showToast({display:failed.map(f => f.body.error).join('\n'), level: ToastStyle.ERROR});
+        } else {
+            showToast({display:"Successfully deleted item(s)!", level: ToastStyle.SUCCESS});
         }
     }
 

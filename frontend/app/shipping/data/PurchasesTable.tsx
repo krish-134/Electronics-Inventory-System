@@ -7,6 +7,8 @@ import { ErrorMessage } from "@hookform/error-message"
 import { useForm, Controller } from "react-hook-form"
 import { ErrorOutline, Store, LocalShipping, Clear } from "@mui/icons-material"
 import { Supplier, Courier } from "../../types"
+import Toast, { ToastInput, ToastStyle } from "../../components/Toast"
+import { useToast } from "../../ToastProvider"
 
 const localHost = `http://localhost:3000`
 
@@ -35,6 +37,8 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
     const [supplierOptions, setSupplierOptions] = useState<Supplier[]>([])
     const [courierOptions, setCourierOptions] = useState<Courier[]>([])
     const { handleSubmit, register, control, formState: { errors } } = useForm();
+
+    const { showToast } = useToast();
 
     useEffect(() => {
         fetch(`${localHost}/shipping/supplier`).then(r => r.json()).then(setSupplierOptions)
@@ -66,6 +70,9 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
             if (Math.floor(res.status / 100) === 2) {
                 setModalOpen(false)
                 handleAdd(newRow)
+                showToast({display: "Successfully created a new purchase!", level: ToastStyle.SUCCESS});
+            } else if (res.status == 409) {
+                showToast({display: "A purchase with this order number already exists", level: ToastStyle.ERROR});
             }
         })
     }
@@ -140,6 +147,8 @@ const AddCard: React.FC<AddCardProps> = ({ label, setModalOpen, handleAdd }) => 
 
 
 const PurchasesTable: React.FC = () => {
+    const { showToast } = useToast();
+
     const [budget, setBudget] = useState<string>("")
     const [filterBudget, setFilterBudget] = useState<number | null>(null)
 
@@ -153,11 +162,21 @@ const PurchasesTable: React.FC = () => {
     }, [filterBudget])
     
     const mutateRow = useCallback(async (row, oldRow) => {
-        await fetch(`${localHost}/shipping/purchase/${oldRow.order_number}`, {
+        const res = await fetch(`${localHost}/shipping/purchase/${oldRow.order_number}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(row)
         })
+
+        if (JSON.stringify(row) !== JSON.stringify(oldRow)) {
+            if (!res.ok) {
+                showToast({display: "Input is invalid!", level: ToastStyle.ERROR});
+                return oldRow;
+            } else {
+                showToast({display: "Successfully edited item!", level: ToastStyle.SUCCESS});
+            }
+        }
+        
         return row
     }, [])
 
@@ -171,7 +190,9 @@ const PurchasesTable: React.FC = () => {
 
         const failed = results.filter(r => !r.ok)
         if (failed.length > 0) {
-            alert(failed.map(f => f.body.error).join('\n'))
+            showToast({display:failed.map(f => f.body.error).join('\n'), level: ToastStyle.ERROR});
+        } else {
+            showToast({display:"Successfully deleted item(s)!", level: ToastStyle.SUCCESS});
         }
     }
 
@@ -187,6 +208,7 @@ const PurchasesTable: React.FC = () => {
 
     return (
         <Stack direction="column" sx={{ width: '100%' }}>
+             
             <Stack direction="row" justifyContent="space-between" alignItems="center">
 
                 <Typography component="h2" variant="h6">

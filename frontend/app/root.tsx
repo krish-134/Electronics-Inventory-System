@@ -6,25 +6,30 @@ import Header from './components/Header.tsx'
 
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router'
 import { Route } from './+types/root'
+import { ToastProvider } from './ToastProvider.tsx'
 
 export function Layout({ children }) {
     return (
-        <html lang="en" suppressHydrationWarning data-mui-color-scheme="dark">
-            <head>
-                <meta charSet="utf-8" />
-                <meta name="viewport" content="width=device-width, initial-scale=1" />
-                <Meta />
-                <Links />
-            </head>
-            <body>
-                <InitColorSchemeScript attribute="class" />
-                <ThemeProvider>
-                    {children}
-                </ThemeProvider>
-                <ScrollRestoration />
-                <Scripts />
-            </body>
-        </html>
+        <ToastProvider>
+            <html lang="en" suppressHydrationWarning data-mui-color-scheme="dark">
+                <head>
+                    <meta charSet="utf-8" />
+                    <meta name="viewport" content="width=device-width, initial-scale=1" />
+                    <Meta />
+                    <Links />
+                </head>
+                <body>
+                    <InitColorSchemeScript attribute="class" />
+                    <ThemeProvider>
+                        
+                        {children}
+                    </ThemeProvider>
+                    <ScrollRestoration />
+                    <Scripts />
+                </body>
+            </html>
+        </ToastProvider>
+        
     )
 }
 

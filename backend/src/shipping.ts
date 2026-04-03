@@ -17,18 +17,26 @@ app.post('/supplier', async c => {
         country,
         contact_email,
     } = body
-    await sql`
-    INSERT INTO supplier (
-        name,
-        url,
-        country,
-        contact_email
-    ) VALUES (
-        ${name},
-        ${url},
-        ${country},
-        ${contact_email ?? null}
-    );`
+
+    try {
+        await sql`
+        INSERT INTO supplier (
+            name,
+            url,
+            country,
+            contact_email
+        ) VALUES (
+            ${name},
+            ${url},
+            ${country},
+            ${contact_email ?? null}
+        );`
+    } catch (error: any) {
+        if (error.code === '23505') {
+            return c.json({ error: "This supplier already exists" }, 409);
+        }
+        return c.json({ error: "Something went wrong" }, 500);
+    }
     
     return c.json(body, 200)
 })
@@ -42,13 +50,19 @@ app.put('/supplier/:name',  async c => {
         country,
         contact_email,
     } = body
-    await sql`
-    UPDATE supplier SET
-        name = ${new_name},
-        url = ${url},
-        country = ${country},
-        contact_email = ${contact_email ?? null}
-        WHERE name = ${name}`
+
+    try {
+        await sql`
+            UPDATE supplier SET
+            name = ${new_name},
+            url = ${url},
+            country = ${country},
+            contact_email = ${contact_email ?? null}
+            WHERE name = ${name}`
+    } catch (e: any) {
+        return c.json({ error: `Malformed input!` }, 500)
+    }
+    
 
     return c.json(name, 200)
 })
@@ -82,7 +96,9 @@ app.post('/courier', async c => {
         website,
         contact_email,
     } = body
-    await sql`
+
+    try {
+        await sql`
         INSERT INTO courier (
             name,
             code_format,
@@ -94,6 +110,13 @@ app.post('/courier', async c => {
             ${website},
             ${contact_email ?? null}
         );`
+    } catch (error: any) {
+        if (error.code === '23505') {
+            return c.json({ error: "This courier already exists" }, 409);
+        }
+        return c.json({ error: "Something went wrong" }, 500);
+    }
+    
     return c.json(body, 200)
 })
 
@@ -106,13 +129,18 @@ app.put('/courier/:name',  async c => {
         website,
         contact_email,
     } = body
-    await sql`
+
+    try {
+        await sql`
         UPDATE courier SET
             name = ${new_name},
             code_format = ${code_format ?? null},
             website = ${website},
             contact_email = ${contact_email ?? null}
             WHERE name = ${name}`
+    } catch (e: any) {
+        return c.json({ error: `Malformed input!` }, 500)
+    }
 
     return c.json(name, 200)
 })
@@ -170,24 +198,33 @@ app.post('/purchase', async c => {
         supplier, 
         courier,
     } = body
-    await sql`
-    INSERT INTO purchase (
-        order_number, 
-        price, 
-        tracking_code, 
-        date_placed, 
-        delivery_date, 
-        supplier, 
-        courier
-        ) VALUES (
-        ${order_number},
-        ${price},
-        ${tracking_code ?? null},
-        ${date_placed},
-        ${delivery_date ?? null},
-        ${supplier},
-        ${courier ?? null}
-        );`
+
+    try {
+        await sql`
+            INSERT INTO purchase (
+            order_number, 
+            price, 
+            tracking_code, 
+            date_placed, 
+            delivery_date, 
+            supplier, 
+            courier
+            ) VALUES (
+            ${order_number},
+            ${price},
+            ${tracking_code ?? null},
+            ${date_placed},
+            ${delivery_date ?? null},
+            ${supplier},
+            ${courier ?? null}
+            );`
+    } catch (error: any) {
+        if (error.code === '23505') {
+            return c.json({ error: "This purchase already exists" }, 409);
+        }
+        return c.json({ error: "Something went wrong" }, 500);
+    }
+    
 
     return c.json(body, 200)
 })
@@ -204,7 +241,9 @@ app.put('/purchase/:order_number', async c => {
         supplier, 
         courier,
     } = body
-    await sql`
+
+    try {
+        await sql`
         UPDATE purchase SET
             order_number = ${new_order_num},
             tracking_code = ${tracking_code ?? null},
@@ -213,6 +252,10 @@ app.put('/purchase/:order_number', async c => {
             supplier = ${supplier},
             courier = ${courier ?? null}
         WHERE order_number = ${order_number}`
+    } catch (e: any) {
+        return c.json({ error: `Malformed input!` }, 500)
+    }
+    
     return c.json(order_number, 200)
 })
 

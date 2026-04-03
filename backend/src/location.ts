@@ -90,48 +90,64 @@ app.get('/components', async c => {
 
 app.post('/create', async c => {
     const { location, type: loc_type } = await c.req.json();
-    switch (loc_type) {
-        case "facility":
-            await sql`INSERT INTO facility (name) VALUES (${location.facility})`;
-            break;
-        case "storage": {
-            const [{ id: facilityId }] = await sql`SELECT id FROM facility WHERE name = ${location.facility}`;
-            await sql`INSERT INTO storage (name, facility) VALUES (${location.storage_name}, ${facilityId})`;
-            break;
+    try {
+        switch (loc_type) {
+            case "facility":
+                await sql`INSERT INTO facility (name) VALUES (${location.facility})`;
+                break;
+            case "storage": {
+                const [{ id: facilityId }] = await sql`SELECT id FROM facility WHERE name = ${location.facility}`;
+                await sql`INSERT INTO storage (name, facility) VALUES (${location.storage_name}, ${facilityId})`;
+                break;
+            }
+            case "position": {
+                const [{ id: storageId }] = await sql`
+                    SELECT s.id FROM storage s
+                    JOIN facility f ON s.facility = f.id
+                    WHERE s.name = ${location.storage_name} AND f.name = ${location.facility}
+                `;
+                await sql`INSERT INTO position (name, storage) VALUES (${location.position}, ${storageId})`;
+                break;
+            }
         }
-        case "position": {
-            const [{ id: storageId }] = await sql`
-                SELECT s.id FROM storage s
-                JOIN facility f ON s.facility = f.id
-                WHERE s.name = ${location.storage_name} AND f.name = ${location.facility}
-            `;
-            await sql`INSERT INTO position (name, storage) VALUES (${location.position}, ${storageId})`;
-            break;
+    } catch (e: any) {
+        if (e.code === '23505') {
+            return c.json({ error: "Use your newly created one first!" }, 409);
         }
+
+        return c.json({ error: "Something went wrong" }, 500);
     }
     return c.json({ ok: true })
 })
 
 app.put('/rename', async c => {
     const { type: loc_type, oldName, newName, facility, storage } = await c.req.json();
-    switch (loc_type) {
-        case "facility":
-            await sql`UPDATE facility SET name = ${newName} WHERE name = ${oldName}`;
-            break;
-        case "storage": {
-            const [{ id: facilityId }] = await sql`SELECT id FROM facility WHERE name = ${facility}`;
-            await sql`UPDATE storage SET name = ${newName} WHERE name = ${oldName} AND facility = ${facilityId}`;
-            break;
+    try {
+        switch (loc_type) {
+            case "facility":
+                await sql`UPDATE facility SET name = ${newName} WHERE name = ${oldName}`;
+                break;
+            case "storage": {
+                const [{ id: facilityId }] = await sql`SELECT id FROM facility WHERE name = ${facility}`;
+                await sql`UPDATE storage SET name = ${newName} WHERE name = ${oldName} AND facility = ${facilityId}`;
+                break;
+            }
+            case "position": {
+                const [{ id: storageId }] = await sql`
+                    SELECT s.id FROM storage s
+                    JOIN facility f ON s.facility = f.id
+                    WHERE s.name = ${storage} AND f.name = ${facility}
+                `;
+                await sql`UPDATE position SET name = ${newName} WHERE name = ${oldName} AND storage = ${storageId}`;
+                break;
+            }
         }
-        case "position": {
-            const [{ id: storageId }] = await sql`
-                SELECT s.id FROM storage s
-                JOIN facility f ON s.facility = f.id
-                WHERE s.name = ${storage} AND f.name = ${facility}
-            `;
-            await sql`UPDATE position SET name = ${newName} WHERE name = ${oldName} AND storage = ${storageId}`;
-            break;
+    } catch (e: any) {
+        if (e.code === '23505') {
+            return c.json({ error: "Please use unique location names!" }, 409);
         }
+
+        return c.json({ error: "Something went wrong" }, 500);
     }
     return c.json({ ok: true })
 })
